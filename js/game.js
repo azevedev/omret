@@ -222,8 +222,13 @@ function renderBoard() {
       } else if (r === played && !state.ending) {
         const ch = state.current[c];
         if (ch) {
-          tile.textContent = ch;
-          tile.dataset.state = state.constraints.locked[c] ? 'pinned' : 'filled';
+          const pinned = state.constraints.locked[c] !== null;
+          // A pinned letter is a fact about the solution, so spell it the way
+          // the solution does. Otherwise a locked Ã would sit directly under
+          // the Ã that locked it and read as a plain A. Letters the player is
+          // still typing stay as typed, since accents aren't on the keyboard.
+          tile.textContent = pinned ? spell(state.solution)[c] : ch;
+          tile.dataset.state = pinned ? 'pinned' : 'filled';
         }
       }
 
@@ -645,9 +650,10 @@ async function revealTrap(word) {
 
   $('doom-veil').classList.add('on');
 
+  const shown = spell(word);
   for (let c = 0; c < WORD_LENGTH; c++) {
     const tile = $(`tile-${rowIndex}-${c}`);
-    tile.textContent = word[c];
+    tile.textContent = shown[c];
     tile.dataset.state = 'filled';
     tile.classList.add('slam');
     board.classList.add('jolt');
