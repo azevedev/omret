@@ -23,7 +23,8 @@
   --toast-fg: #121213;
 
   --header-h: 50px;
-  --keyboard-h: 200px;
+  --keyboard-h: 224px;
+  --key-gap: 5px;
 }
 
 :root[data-theme="light"] {
@@ -275,6 +276,16 @@ body {
     );
 }
 
+/* Where the next letter will land. An inset rule rather than an outer border,
+   so the tile doesn't shift or grow as the cursor moves along the row. */
+.tile[data-cursor="true"] {
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--fg) 55%, transparent);
+}
+
+.tile[data-cursor="true"][data-state="placeholder"] {
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--locked) 70%, transparent);
+}
+
 /* A locked slot the player hasn't reached yet: shows which letter it wants,
    ghosted, so they can see what to press before they get there. */
 .tile[data-state="placeholder"] {
@@ -348,26 +359,28 @@ body {
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
-  gap: 8px;
-  padding: 8px 6px max(8px, env(safe-area-inset-bottom));
-  max-width: 500px;
+  gap: var(--key-gap);
+  /* Thin side padding so the keys reach the edges of a phone screen. */
+  padding: 4px var(--key-gap) max(4px, env(safe-area-inset-bottom));
+  max-width: 520px;
   width: 100%;
   margin: 0 auto;
 }
 
+/* Ten columns per row. ENTER spans the last three, so every row shares the
+   same column edges instead of drifting out of alignment. */
 .kb-row {
-  display: flex;
-  gap: 6px;
-  justify-content: center;
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: var(--key-gap);
   flex: 1 1 0;
   touch-action: manipulation;
 }
 
 .key {
-  flex: 1 1 auto;
   min-width: 0;
   border: 0;
-  border-radius: 4px;
+  border-radius: 6px;
   background: var(--key-bg);
   color: var(--key-fg);
   font-family: inherit;
@@ -382,9 +395,9 @@ body {
 }
 
 /* ENTER carries a word rather than a letter, so it needs its own scale. */
-.key.wide { flex: 1.6 1 auto; font-size: clamp(10px, 3vw, 12px); }
+.key.wide { grid-column: span 3; font-size: clamp(11px, 3.2vw, 14px); }
 .key:active { transform: scale(.96); }
-.key svg { width: 24px; height: 24px; fill: currentColor; }
+.key svg { width: clamp(22px, 6vw, 26px); height: clamp(22px, 6vw, 26px); fill: currentColor; }
 
 .key[data-state="locked"]   { background: var(--locked);   color: #fff; }
 .key[data-state="required"] { background: var(--required); color: #fff; }
@@ -972,7 +985,11 @@ body.with-panel { padding-right: var(--panel-w, 240px); }
 }
 
 @media (max-height: 680px) {
-  :root { --keyboard-h: 170px; }
+  :root { --keyboard-h: 186px; }
+}
+
+@media (max-height: 570px) {
+  :root { --keyboard-h: 158px; --key-gap: 4px; }
 }
 
 @media (max-width: 380px) {

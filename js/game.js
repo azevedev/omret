@@ -231,6 +231,9 @@ function renderBoard() {
         const ch = state.current[c];
         const locked = state.constraints.locked[c] !== null;
 
+        // Mark where the next letter will land.
+        if (c === cursor() && !state.busy) tile.dataset.cursor = 'true';
+
         // A locked letter is a fact about the solution, so spell it the way the
         // solution does. Otherwise a locked Ã would sit directly under the Ã
         // that locked it and read as a plain A. Free letters stay as typed,
@@ -267,7 +270,12 @@ function sizeBoard() {
   board.style.height = `${tile * MAX_GUESSES + 5 * (MAX_GUESSES - 1) + 16}px`;
 }
 
-const KB_ROWS = ['qwertyuiop', 'asdfghjkl', '↵zxcvbnm⌫'];
+/**
+ * Key order follows term.ooo: backspace closes the middle row, ENTER closes the
+ * bottom one. Each row is a 10-column grid, and ENTER spans the last three, so
+ * every row lines up on the same column edges.
+ */
+const KB_ROWS = ['qwertyuiop', 'asdfghjkl⌫', 'zxcvbnm↵'];
 
 function renderKeyboard() {
   keyboard.textContent = '';
@@ -285,7 +293,7 @@ function renderKeyboard() {
         key.textContent = 'Enter';
         key.dataset.key = 'enter';
       } else if (ch === '⌫') {
-        key.className = 'key wide';
+        key.className = 'key';
         key.dataset.key = 'backspace';
         key.setAttribute('aria-label', 'Backspace');
         key.innerHTML = '<svg viewBox="0 0 24 24"><path d="M22 3H7c-.7 0-1.2.4-1.6.9L0 12l5.4 8.1c.4.5.9.9 1.6.9h15c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-3 12.6L17.6 17 14 13.4 10.4 17 9 15.6 12.6 12 9 8.4 10.4 7 14 10.6 17.6 7 19 8.4 15.4 12 19 15.6z"/></svg>';
