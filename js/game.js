@@ -173,9 +173,17 @@ function startRound({ practice, replay = [] } = {}) {
   if (state.ending) showStats(true);
 }
 
+/**
+ * Locked slots start empty rather than pre-filled. The player types the whole
+ * word, and a locked slot simply refuses every letter except its own, so
+ * reaching for the letter you can already see on the board is the right move.
+ */
 function resetInput() {
-  state.current = state.constraints.locked.map((l) => l);
+  state.current = new Array(WORD_LENGTH).fill(null);
 }
+
+/** First slot still waiting for a letter, or -1 when the row is full. */
+const cursor = () => state.current.indexOf(null);
 
 // ---------------------------------------------------------------------------
 // Rendering
@@ -221,14 +229,19 @@ function renderBoard() {
         tile.dataset.state = 'locked';
       } else if (r === played && !state.ending) {
         const ch = state.current[c];
-        if (ch) {
-          const pinned = state.constraints.locked[c] !== null;
-          // A pinned letter is a fact about the solution, so spell it the way
-          // the solution does. Otherwise a locked Ã would sit directly under
-          // the Ã that locked it and read as a plain A. Letters the player is
-          // still typing stay as typed, since accents aren't on the keyboard.
-          tile.textContent = pinned ? spell(state.solution)[c] : ch;
-          tile.dataset.state = pinned ? 'pinned' : 'filled';
+        const locked = state.constraints.locked[c] !== null;
+
+        // A locked letter is a fact about the solution, so spell it the way the
+        // solution does. Otherwise a locked Ã would sit directly under the Ã
+        // that locked it and read as a plain A. Free letters stay as typed,
+        // since accents aren't on the keyboard.
+        if (locked) {
+          tile.textContent = spell(state.solution)[c];
+          // Ghosted until the player actually presses it, then solid.
+          tile.dataset.state = ch ? 'pinned' : 'placeholder';
+        } else if (ch) {
+          tile.textContent = ch;
+          tile.dataset.state = 'filled';
         }
       }
 
@@ -478,11 +491,11 @@ function rejectionMessage(res) {
 let lastReject = { letter: '', at: 0 };
 
 /**
- * Refuse a dead letter at the keystroke instead of at submit time: the letter
- * never enters the row, and the key itself flashes red and shakes so the reason
- * is obvious without reading a message.
+ * Refuse a keystroke instead of waiting for submit: the letter never enters the
+ * row, and the key itself flashes red and shakes so the reason is obvious
+ * without reading a message.
  */
-function rejectLetter(ch) {
+function refuse(ch, message) {
   const key = keyboard.querySelector(`.key[data-key="${ch}"]`);
   if (key) {
     key.classList.remove('reject');
@@ -503,33 +516,37 @@ function rejectLetter(ch) {
 
   // Spell out the reason, but don't stack a toast per keypress.
   const now = performance.now();
-  if (lastReject.letter !== ch || now - lastReject.at > 1500) {
-    toast(t('toast.banned', { letter: ch.toUpperCase() }), 1400);
-  }
+  if (lastReject.letter !== ch || now - lastReject.at > 1500) toast(message, 1400);
   lastReject = { letter: ch, at: now };
 }
 
 function typeLetter(ch) {
   if (state.busy || state.ending) return;
 
-  if (state.constraints.banned.has(ch)) {
-    rejectLetter(ch);
+  const i = cursor();
+  if (i === -1) return;                       // row already full
+
+  const required = state.constraints.locked[i];
+  if (required !== null) {
+    // This slot belongs to one letter. Nothing else gets in, not even a
+    // letter that would be legal anywhere else.
+    if (ch !== required) {
+      refuse(ch, t('toast.mustPress', { letter: spell(state.solution)[i].toUpperCase() }));
+      return;
+    }
+  } else if (state.constraints.banned.has(ch)) {
+    refuse(ch, t('toast.banned', { letter: ch.toUpperCase() }));
     return;
   }
 
-  for (let i = 0; i < WORD_LENGTH; i++) {
-    if (state.constraints.locked[i] === null && state.current[i] === null) {
-      state.current[i] = ch;
-      renderBoard();
-      return;
-    }
-  }
+  state.current[i] = ch;
+  renderBoard();
 }
 
 function backspace() {
   if (state.busy || state.ending) return;
   for (let i = WORD_LENGTH - 1; i >= 0; i--) {
-    if (state.constraints.locked[i] === null && state.current[i] !== null) {
+    if (state.current[i] !== null) {
       state.current[i] = null;
       renderBoard();
       return;

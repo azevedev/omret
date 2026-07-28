@@ -275,7 +275,16 @@ body {
     );
 }
 
-/* A green letter carried forward into a future row: pinned, uneditable. */
+/* A locked slot the player hasn't reached yet: shows which letter it wants,
+   ghosted, so they can see what to press before they get there. */
+.tile[data-state="placeholder"] {
+  border-color: color-mix(in srgb, var(--locked) 35%, var(--tile-empty-border));
+  color: color-mix(in srgb, var(--locked) 42%, transparent);
+  background: color-mix(in srgb, var(--locked) 5%, transparent);
+  position: relative;
+}
+
+/* A locked letter the player has now pressed. */
 .tile[data-state="pinned"] {
   border-color: var(--locked);
   color: var(--locked);
@@ -283,7 +292,8 @@ body {
   position: relative;
 }
 
-.tile[data-state="pinned"]::after {
+.tile[data-state="pinned"]::after,
+.tile[data-state="placeholder"]::after {
   content: "";
   position: absolute;
   top: 3px; right: 3px;
@@ -292,6 +302,8 @@ body {
   background: var(--locked);
   opacity: .8;
 }
+
+.tile[data-state="placeholder"]::after { opacity: .4; }
 
 @keyframes pop {
   from { transform: scale(.9); opacity: 0; }
