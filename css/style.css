@@ -116,7 +116,7 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   min-height: 0;
   overflow: hidden;
 }
@@ -216,10 +216,10 @@ body {
 .board-wrap {
   flex: 1 1 auto;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   width: 100%;
-  padding: 8px;
+  padding: 4px 8px 8px;
   min-height: 0;
   overflow: hidden;
 }
@@ -360,7 +360,7 @@ body {
   color: var(--key-fg);
   font-family: inherit;
   font-weight: 700;
-  font-size: clamp(11px, 3.4vw, 13px);
+  font-size: clamp(15px, 4.8vw, 19px);
   text-transform: uppercase;
   cursor: pointer;
   user-select: none;
@@ -369,9 +369,10 @@ body {
   transition: background-color .15s, color .15s, opacity .15s;
 }
 
-.key.wide { flex: 1.6 1 auto; font-size: 11px; }
+/* ENTER carries a word rather than a letter, so it needs its own scale. */
+.key.wide { flex: 1.6 1 auto; font-size: clamp(10px, 3vw, 12px); }
 .key:active { transform: scale(.96); }
-.key svg { width: 22px; height: 22px; fill: currentColor; }
+.key svg { width: 24px; height: 24px; fill: currentColor; }
 
 .key[data-state="locked"]   { background: var(--locked);   color: #fff; }
 .key[data-state="required"] { background: var(--required); color: #fff; }
