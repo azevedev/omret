@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>OMRET social card</title>
+<style>
+  /* Rendered at exactly 1200x630 and screenshotted into assets/. Not shipped
+     to players; see tools/build.mjs notes and the README. */
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body { width: 1200px; height: 630px; overflow: hidden; }
+
+  body {
+    background: #121213;
+    color: #fff;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 56px;
+    padding: 0 76px;
+    position: relative;
+  }
+
+  /* Same red bloom the game uses when the trap closes. */
+  body::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 72% 50%, rgba(211,60,78,.20), transparent 62%);
+    pointer-events: none;
+  }
+
+  .left { position: relative; z-index: 1; }
+
+  .mark {
+    font-size: 92px;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -.01em;
+  }
+
+  .mark em { color: #d33c4e; font-style: italic; }
+
+  .tagline {
+    margin-top: 26px;
+    font-size: 34px;
+    line-height: 1.28;
+    font-weight: 500;
+    max-width: 15ch;
+  }
+
+  .tagline b { color: #d33c4e; }
+
+  .rules {
+    margin-top: 34px;
+    display: flex;
+    flex-direction: column;
+    gap: 13px;
+    font-size: 19px;
+    color: #a8abac;
+  }
+
+  .rule { display: flex; align-items: center; gap: 13px; }
+
+  .chip {
+    width: 34px; height: 34px;
+    border-radius: 5px;
+    display: grid;
+    place-items: center;
+    font-weight: 700;
+    font-size: 18px;
+    color: #fff;
+    flex: none;
+  }
+
+  .chip.red { background: #d33c4e; }
+  .chip.amber { background: #c8871f; }
+  .chip.gray { background: #3a3a3c; }
+
+  .rule b { color: #fff; font-weight: 700; }
+
+  /* The board: five rows tightening onto the answer. */
+  .board {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-rows: repeat(4, 1fr);
+    gap: 9px;
+  }
+
+  .row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 9px; }
+
+  .t {
+    width: 82px; height: 82px;
+    display: grid;
+    place-items: center;
+    font-size: 42px;
+    font-weight: 700;
+    border: 3px solid #3a3a3c;
+    border-radius: 3px;
+  }
+
+  .t.red { background: #d33c4e; border-color: #d33c4e; }
+  .t.amber { background: #c8871f; border-color: #c8871f; }
+  .t.dead { background: #3a3a3c; border-color: #3a3a3c; color: #e6e6e6; }
+
+  .t.ghost {
+    color: rgba(211,60,78,.45);
+    border-color: rgba(211,60,78,.38);
+    background: rgba(211,60,78,.06);
+  }
+
+  .badge {
+    position: absolute;
+    right: 0;
+    bottom: -52px;
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: #fff;
+    background: #d33c4e;
+    border-radius: 999px;
+    padding: 7px 17px;
+    white-space: nowrap;
+  }
+</style>
+</head>
+<body>
+
+<div class="left">
+  <div class="mark" id="mark"></div>
+  <div class="tagline" id="tagline"></div>
+  <div class="rules" id="rules"></div>
+</div>
+
+<div class="board" id="board"></div>
+
+<script>
+  const LOCALE = new URLSearchParams(location.search).get('locale') || 'pt';
+
+  const COPY = {
+    pt: {
+      mark: 'OM<em>RET</em>',
+      tagline: 'O jogo de palavras em que você precisa <b>errar</b>.',
+      rules: [
+        ['red', 'A', 'Vermelho <b>trava</b> a letra na casa'],
+        ['amber', 'E', 'Âmbar <b>obriga</b> a movê-la'],
+        ['gray', 'S', 'Cinza <b>mata</b> a letra de vez'],
+      ],
+      badge: '1 palavra restante',
+      // Rows tighten until only the answer is left.
+      board: [
+        [['C', 'dead'], ['A', 'dead'], ['R', 'dead'], ['T', 'amber'], ['A', 'dead']],
+        [['P', 'dead'], ['O', 'red'], ['S', 'dead'], ['T', 'red'], ['E', 'dead']],
+        [['M', 'dead'], ['O', 'red'], ['N', 'dead'], ['T', 'red'], ['O', 'amber']],
+        [['', 'ghost'], ['O', 'ghost'], ['', 'ghost'], ['T', 'ghost'], ['', 'ghost']],
+      ],
+    },
+    en: {
+      mark: 'WORDLE <em>REVERSED</em>',
+      tagline: 'The word game where you have to <b>miss</b>.',
+      rules: [
+        ['red', 'A', 'Red <b>locks</b> the letter in place'],
+        ['amber', 'E', 'Amber <b>forces</b> you to move it'],
+        ['gray', 'S', 'Gray <b>kills</b> the letter for good'],
+      ],
+      badge: '1 word left',
+      board: [
+        [['C', 'dead'], ['R', 'dead'], ['A', 'dead'], ['N', 'amber'], ['E', 'amber']],
+        [['M', 'dead'], ['O', 'red'], ['N', 'red'], ['E', 'red'], ['Y', 'red']],
+        [['B', 'dead'], ['O', 'red'], ['N', 'red'], ['E', 'red'], ['Y', 'red']],
+        [['', 'ghost'], ['O', 'ghost'], ['N', 'ghost'], ['E', 'ghost'], ['Y', 'ghost']],
+      ],
+    },
+  };
+
+  const c = COPY[LOCALE];
+  document.getElementById('mark').innerHTML = c.mark;
+  document.getElementById('tagline').innerHTML = c.tagline;
+
+  document.getElementById('rules').innerHTML = c.rules.map(
+    ([tone, letter, text]) =>
+      `<div class="rule"><div class="chip ${tone}">${letter}</div><div>${text}</div></div>`
+  ).join('');
+
+  const board = document.getElementById('board');
+  board.innerHTML = c.board.map(
+    (row) => `<div class="row">${row.map(
+      ([letter, tone]) => `<div class="t ${tone}">${letter}</div>`).join('')}</div>`
+  ).join('') + `<div class="badge">${c.badge}</div>`;
+</script>
+</body>
+</html>

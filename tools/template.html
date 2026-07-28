@@ -1,14 +1,35 @@
 <!DOCTYPE html>
-<html lang="{{LANG}}" data-locale="{{LOCALE}}">
+<html lang="{{LANG}}" data-locale="{{LOCALE}}" data-version="{{VERSION}}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
 <meta name="description" content="{{DESCRIPTION}}">
 <meta name="theme-color" content="#121213">
 <title>{{TITLE}}</title>
-<link rel="stylesheet" href="../css/style.css">
-<link rel="alternate" hreflang="pt-BR" href="../pt-br/">
-<link rel="alternate" hreflang="en-US" href="../eng-us/">
+
+<link rel="canonical" href="{{SITE}}{{DIR}}/">
+<link rel="alternate" hreflang="pt-BR" href="{{SITE}}pt-br/">
+<link rel="alternate" hreflang="en-US" href="{{SITE}}eng-us/">
+<link rel="alternate" hreflang="x-default" href="{{SITE}}">
+
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="OMRET">
+<meta property="og:locale" content="{{OG_LOCALE}}">
+<meta property="og:title" content="{{OG_TITLE}}">
+<meta property="og:description" content="{{DESCRIPTION}}">
+<meta property="og:url" content="{{SITE}}{{DIR}}/">
+<meta property="og:image" content="{{SITE}}assets/{{OG_IMAGE}}?v={{VERSION}}">
+<meta property="og:image:type" content="image/jpeg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="{{OG_ALT}}">
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{{OG_TITLE}}">
+<meta name="twitter:description" content="{{DESCRIPTION}}">
+<meta name="twitter:image" content="{{SITE}}assets/{{OG_IMAGE}}?v={{VERSION}}">
+
+<link rel="stylesheet" href="../css/style.css?v={{VERSION}}">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='4' fill='%23d33c4e'/></svg>">
 </head>
 <body>
@@ -119,6 +140,10 @@
     <div class="dist" id="dist"></div>
 
     <div class="endgame" id="endgame" hidden>
+      <div class="dodged" id="dodged" hidden>
+        <div class="dodged-caption" id="dodged-caption"></div>
+        <div class="dodged-tiles" id="dodged-tiles"></div>
+      </div>
       <div class="endgame-msg" id="endgame-msg"></div>
       <div class="endgame-actions">
         <div class="countdown" id="countdown" hidden>
@@ -206,6 +231,6 @@
   </div>
 </div>
 
-<script type="module" src="../js/game.js"></script>
+<script type="module" src="../js/game.js?v={{VERSION}}"></script>
 </body>
 </html>

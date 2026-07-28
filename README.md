@@ -80,6 +80,45 @@ https://<user>.github.io/omret/eng-us/   Wordle Reversed
 All asset paths are relative, so it works the same under a custom domain
 (`omret.com.br/pt-br/`) with a `CNAME` file at the root.
 
+**Run `node tools/build.mjs` before every push.** It regenerates the locale pages
+and stamps a content hash onto every asset URL, which is what stops players from
+running a stale build.
+
+### Why the cache needs handling
+
+GitHub Pages serves everything with `Cache-Control: max-age=600` and gives you no
+way to change that, so for ten minutes a browser is entitled to reuse the old
+files. Three things address it:
+
+1. **Hashed asset URLs.** The build hashes the CSS and JS and stamps `?v=<hash>`
+   on every reference. New build, new URLs, guaranteed fetch.
+2. **The hash is passed down the import chain.** A query string is *not* inherited
+   by a module's own imports, so a versioned `game.js` would still pull a cached
+   `engine.js` — a fresh entry point wired to stale internals, which is worse than
+   no cache busting at all. `game.js` reads its own version back off
+   `import.meta.url` and appends it to every import it makes.
+3. **`version.json` catches stale HTML.** Hashing cannot help a page whose HTML is
+   itself cached, because that HTML points at the old hashes. On load the page
+   fetches `version.json` with `cache: 'no-store'` and, if it disagrees, reloads
+   through a URL the CDN has never seen. A `sessionStorage` guard means it can
+   only do this once per deploy, so a bad fetch can never loop the page.
+
+The one case still not covered is a tab left open across a deploy without being
+reloaded; it keeps playing the old build until the player revisits. Fixing that
+properly needs a real CDN in front, not Pages.
+
+### Link previews
+
+Every page carries Open Graph and Twitter card tags with absolute image URLs, so a
+pasted link unfurls with a real card in Slack, WhatsApp, Discord and X. The three
+images in `assets/` are 1200x630 JPEGs.
+
+They are screenshots of `tools/social-card.html`, which draws the card in the
+game's own colours at exactly 1200x630. To change one, edit that file, open it at
+`?locale=pt` or `?locale=en` in a 1200x630 viewport, and save the screenshot over
+the matching file in `assets/`. The root card reuses the Portuguese one, since the
+chooser leads in Portuguese.
+
 ## Layout
 
 ```

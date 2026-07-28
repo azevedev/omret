@@ -18,6 +18,7 @@
   --locked: #d33c4e;      /* was green — now danger */
   --required: #c8871f;    /* was yellow — now obligation */
   --banned: #3a3a3c;      /* spent */
+  --safe: #57a85f;        /* winning only, so green never means "correct" */
 
   --toast-bg: #ffffff;
   --toast-fg: #121213;
@@ -709,6 +710,90 @@ body {
 .dist-bar.current { background: var(--locked); }
 
 .endgame { border-top: 1px solid var(--border); margin-top: 20px; padding-top: 16px; }
+
+/* ── The word you got away from ──────────────────────────────────────── */
+
+.dodged { text-align: center; margin-bottom: 16px; }
+.dodged[hidden] { display: none; }
+
+.dodged-tiles {
+  display: flex;
+  justify-content: center;
+  gap: 5px;
+  position: relative;
+}
+
+/* Green appears nowhere else in the game, so it reads unambiguously as safe. */
+.dodged-tile {
+  width: 42px; height: 42px;
+  display: grid;
+  place-items: center;
+  font-size: 22px;
+  font-weight: 700;
+  text-transform: uppercase;
+  border: 2px solid var(--safe);
+  color: var(--safe);
+  background: color-mix(in srgb, var(--safe) 12%, transparent);
+  animation: dodged-in .4s cubic-bezier(.2, .8, .3, 1.2) backwards;
+}
+
+.dodged-tile:nth-child(1) { animation-delay: .05s; }
+.dodged-tile:nth-child(2) { animation-delay: .12s; }
+.dodged-tile:nth-child(3) { animation-delay: .19s; }
+.dodged-tile:nth-child(4) { animation-delay: .26s; }
+.dodged-tile:nth-child(5) { animation-delay: .33s; }
+
+@keyframes dodged-in {
+  from { opacity: 0; transform: translateY(8px) scale(.85); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* Struck through: the whole point is that these letters never got typed. */
+.dodged-tiles::after {
+  content: "";
+  position: absolute;
+  left: -6px; right: -6px;
+  top: 50%;
+  height: 3px;
+  background: var(--safe);
+  border-radius: 2px;
+  transform: scaleX(0);
+  transform-origin: left center;
+  animation: strike .45s ease .45s forwards;
+}
+
+@keyframes strike {
+  to { transform: scaleX(1); }
+}
+
+.dodged-caption {
+  margin-bottom: 10px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--safe);
+  opacity: 0;
+  animation: fade-up .35s ease forwards;
+}
+
+.dodged-close {
+  margin-top: 10px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--fg-dim);
+  opacity: 0;
+  animation: fade-up .4s ease 1s forwards;
+}
+
+.dodged-close b { color: var(--fg); }
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: none; }
+}
+
+.endgame-msg.win strong { color: var(--safe); }
 
 .endgame-msg {
   text-align: center;

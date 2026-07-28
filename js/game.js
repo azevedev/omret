@@ -7,12 +7,23 @@
  * interface strings.
  */
 
-import {
+/**
+ * The build stamps ?v=<hash> onto this script's URL. A query string is not
+ * inherited by a module's own imports, so loading a fresh game.js beside a
+ * cached engine.js is a real possibility — worse than not busting the cache at
+ * all. Reading the version back off import.meta.url and passing it down keeps
+ * the whole graph on one version.
+ */
+const ASSET_V = new URL(import.meta.url).search;
+
+const {
   WORD_LENGTH, MAX_GUESSES, MARK, ENDING, STARVED_IS_LOSS,
   evaluate, newConstraints, applyGuess, checkLegal, legalWords,
   deadEnd, puzzleNumber, solutionFor,
-} from './engine.js';
-import { LOCALES, DEFAULT_LOCALE, setLocale, getLocale, t, applyI18n } from './i18n.js';
+} = await import(`./engine.js${ASSET_V}`);
+
+const { LOCALES, DEFAULT_LOCALE, setLocale, t, applyI18n } =
+  await import(`./i18n.js${ASSET_V}`);
 
 const LOCALE = setLocale(document.documentElement.dataset.locale || DEFAULT_LOCALE);
 const LOCALE_KEY = 'omret/locale';
@@ -27,8 +38,8 @@ try { localStorage.setItem(LOCALE_KEY, LOCALE); } catch { /* storage blocked */ 
  * the board shows "ÁCIDO", exactly like TERMO.
  */
 const { ANSWERS, VALID, VALID_LIST, DISPLAY } = LOCALE === 'en-US'
-  ? await import('./words-en.js')
-  : await import('./words-pt.js');
+  ? await import(`./words-en.js${ASSET_V}`)
+  : await import(`./words-pt.js${ASSET_V}`);
 
 /** The spelling shown for a word; identical to the key in English. */
 const spell = (word) => DISPLAY[word] || word;
@@ -132,6 +143,7 @@ const state = {
   ending: null,
   practice: false,
   wordDeath: new Map(),   // word -> turn it stopped being playable
+  closest: Infinity,      // fewest legal words the round ever came down to
 };
 
 const $ = (id) => document.getElementById(id);
@@ -152,6 +164,7 @@ function startRound({ practice, replay = [] } = {}) {
   state.ending = null;
   state.busy = false;
   state.wordDeath = new Map();
+  state.closest = Infinity;
   lastPoolCount = null;
 
   for (const g of replay) {
@@ -340,6 +353,11 @@ function renderStatus() {
 
   const legal = legalWords(state.constraints, dict().list, dict().set, ruleOpts());
   renderWordPanel(legal);
+
+  // How close the trap ever got. Only meaningful once a guess has been played.
+  if (state.constraints.history.length > 0) {
+    state.closest = Math.min(state.closest, legal.length);
+  }
 
   if (!store.settings.pool) { lastPoolCount = legal.length; return; }
 
@@ -809,7 +827,9 @@ function showStats(withEndgame = false) {
   endgame.hidden = !(withEndgame && state.ending);
 
   if (withEndgame && state.ending) {
+    renderDodged();
     $('endgame-msg').innerHTML = endgameMessage();
+    $('endgame-msg').classList.toggle('win', state.ending === ENDING.SURVIVED);
     $('btn-share').hidden = state.practice;
     $('countdown').hidden = state.practice;
     if (!state.practice) startCountdown();
@@ -824,6 +844,42 @@ const ENDING_KEY = {
   [ENDING.CORNERED]: 'cornered',
   [ENDING.STARVED]: 'starved',
 };
+
+/**
+ * On a win the board is full, so there is nowhere on it to show the word the
+ * player dodged. It gets its own moment here instead: the answer spelled out in
+ * green, struck through, with how close the squeeze actually got.
+ */
+function renderDodged() {
+  const box = $('dodged');
+  const won = state.ending === ENDING.SURVIVED;
+  box.hidden = !won;
+  if (!won) return;
+
+  const word = spell(state.solution).toUpperCase();
+  const tiles = $('dodged-tiles');
+  tiles.textContent = '';
+  for (const letter of word) {
+    const cell = document.createElement('div');
+    cell.className = 'dodged-tile';
+    cell.textContent = letter;
+    tiles.appendChild(cell);
+  }
+
+  const caption = $('dodged-caption');
+  caption.textContent = t('end.neverTyped');
+
+  // Replace any previous round's near-miss line.
+  box.querySelector('.dodged-close')?.remove();
+  if (Number.isFinite(state.closest)) {
+    const line = document.createElement('div');
+    line.className = 'dodged-close';
+    line.innerHTML = state.closest <= 2
+      ? t('end.closestOne')
+      : t('end.closest', { n: state.closest.toLocaleString(LOCALE) });
+    box.appendChild(line);
+  }
+}
 
 function endgameMessage() {
   const key = ENDING_KEY[state.ending];
@@ -1050,6 +1106,32 @@ window.addEventListener('resize', () => {
 // Boot
 // ---------------------------------------------------------------------------
 
+/**
+ * An open tab can be running HTML that GitHub Pages cached up to ten minutes
+ * ago, and no amount of asset hashing fixes that: the stale HTML points at
+ * stale hashes. version.json is fetched with no-store, so it always reflects
+ * what is actually deployed. If it disagrees, reload through a URL the CDN has
+ * never seen, which forces a fresh copy of the page itself.
+ */
+async function checkForNewBuild() {
+  const mine = document.documentElement.dataset.version;
+  if (!mine) return;                       // dev, served straight from source
+
+  try {
+    const res = await fetch(`../version.json?t=${Date.now()}`, { cache: 'no-store' });
+    if (!res.ok) return;
+    const { version } = await res.json();
+    if (!version || version === mine) return;
+
+    // One attempt per deploy, so a bad fetch can never loop the page.
+    if (sessionStorage.getItem('omret/reloadedFor') === version) return;
+    sessionStorage.setItem('omret/reloadedFor', version);
+    location.replace(`${location.pathname}?v=${version}`);
+  } catch {
+    /* offline, or version.json missing: keep playing what we have */
+  }
+}
+
 applyI18n();
 renderLangSwitch();
 applySettings();
@@ -1067,3 +1149,6 @@ if (!store.seenHelp) {
   store.seenHelp = true;
   save();
 }
+
+// Deliberately not awaited: a slow or failed check must never delay the game.
+checkForNewBuild();
