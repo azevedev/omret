@@ -598,10 +598,7 @@ function revealRow(rowIndex, word, marks) {
 
 function finishTurn(word, rowIndex) {
   // 1. Typed the answer.
-  if (word === state.solution) {
-    bounceRow(rowIndex);
-    return endRound(ENDING.FOUND);
-  }
+  if (word === state.solution) return revealFound(rowIndex);
 
   // 2. Survived every guess.
   if (state.constraints.history.length >= MAX_GUESSES) {
@@ -660,6 +657,17 @@ async function revealTrap(word) {
   }
 
   await beat(500);
+  await ignite(rowIndex);
+  endRound(ENDING.CORNERED, { quiet: true, statsDelay: 700 });
+}
+
+/**
+ * Set a finished row alight: each letter turns red in sequence, then the whole
+ * row pulses while the screen closes in. Shared by both losing endings, so
+ * walking into the answer yourself looks exactly as bad as being forced into it.
+ */
+async function ignite(rowIndex) {
+  $('doom-veil').classList.add('on');
 
   for (let c = 0; c < WORD_LENGTH; c++) {
     const tile = $(`tile-${rowIndex}-${c}`);
@@ -671,9 +679,17 @@ async function revealTrap(word) {
   navigator.vibrate?.([50, 60, 120]);
   $(`row-${rowIndex}`).classList.add('doom-pulse');
   await beat(1500);
-
   $('doom-veil').classList.remove('on');
-  endRound(ENDING.CORNERED, { quiet: true, statsDelay: 700 });
+}
+
+/** You typed the answer. Same funeral, minus the forced spelling-out. */
+async function revealFound(rowIndex) {
+  state.busy = true;
+  await beat(350);
+  toast(t('end.found'), 2400);
+  await beat(450);
+  await ignite(rowIndex);
+  endRound(ENDING.FOUND, { quiet: true, statsDelay: 700 });
 }
 
 function bounceRow(rowIndex) {
