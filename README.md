@@ -26,7 +26,7 @@ they're obligations on your next guess:
 | ⬛ Gray | absent | **Dead.** You may never type that letter again. |
 | ▨ Hatched | gray, but the letter is locked or amber elsewhere | **No more copies.** REFER against RETCH greys the last R — the word's only R was already claimed. R is still locked, so you must keep using it. |
 
-Survive five guesses without typing the answer and you win.
+Survive six guesses without typing the answer and you win.
 
 **The two ways to lose:** you type the answer, or you get **cornered** — the locks,
 obligations and dead letters squeeze until the only word you're still allowed to
@@ -107,15 +107,15 @@ simulator and the browser play by byte-identical rules.
 node tools/simulate.mjs 400 pt     # or: en
 ```
 
-Survival rate at the shipped config — 5 guesses, common words, every amber must
-move. Higher means easier:
+Survival rate at the shipped config: 6 guesses, common words, every amber must
+move. Higher means easier.
 
 | Edition | random | rare-letter dodge | conserve-alphabet |
 | --- | --- | --- | --- |
-| Português | 28.7% | 63.0% | **76.3%** |
-| English | 24.3% | **75.0%** | 72.8% |
+| Português | 11.3% | 39.0% | **56.8%** |
+| English | 9.0% | **52.0%** | 48.0% |
 
-The two languages reward *different* strategies, which was not designed — it falls
+The two languages reward *different* strategies, which was not designed. It falls
 out of the dictionaries. English answers are full of rare consonants you can dodge
 into, so hunting obscure letters wins. Portuguese answers share vowels far more
 heavily, so obscure letters make contact anyway and conserving your alphabet wins
@@ -124,11 +124,13 @@ instead.
 Findings that shaped the rules:
 
 1. **The guess dictionary is the difficulty.** With the full English dictionary the
-   dodge strategy survives 96.8%, and tightening the rules barely dents it (96.5%).
+   dodge strategy survives 92.8%, and tightening the rules barely dents it.
    Restricting guesses to common words is the only lever that bites. Hence
    "Common words only", on by default.
-2. **More guesses makes this game harder, not easier** — the opposite of Wordle.
+2. **More guesses makes this game harder, not easier**, the opposite of Wordle.
    Surviving is winning, so every extra turn is another chance to get cornered.
+   Going from five guesses to six drops the best English line from 75.0% to 52.0%,
+   and the best Portuguese line from 76.3% to 56.8%.
 3. **Starving is unreachable.** Running out of *every* legal word never happened in
    any variant, in either language, including under a strategy built to force it.
    `STARVED_IS_LOSS` still handles it, but it isn't a real ending.

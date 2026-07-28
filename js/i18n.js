@@ -19,7 +19,7 @@ const STRINGS = {
     'app.title': 'OMRET',
     'app.tagline': 'Termo ao contrário',
     'app.description':
-      'OMRET: o objetivo é NÃO descobrir a palavra. Sobreviva a cinco tentativas sem cair na resposta.',
+      'OMRET: o objetivo é NÃO descobrir a palavra. Sobreviva a seis tentativas sem cair na resposta.',
 
     'header.help': 'Como jogar',
     'header.stats': 'Estatísticas',
@@ -32,7 +32,7 @@ const STRINGS = {
     'status.poolTitle': 'Quantas palavras você ainda pode jogar',
 
     'help.title': 'Como Jogar',
-    'help.lede': 'Adivinhe a palavra <em>cinco vezes</em>. E, aconteça o que acontecer, <strong>não acerte.</strong>',
+    'help.lede': 'Adivinhe a palavra <em>seis vezes</em>. E, aconteça o que acontecer, <strong>não acerte.</strong>',
     'help.intro':
       'Cada tentativa é marcada como no Termo normal. A diferença é que aqui as marcas mandam em você: <strong>a próxima jogada tem que obedecer a elas.</strong>',
     'help.rule.locked':
@@ -57,7 +57,7 @@ const STRINGS = {
     'help.lose.cornered':
       '<strong>Você fica encurralado.</strong> As travas e as letras mortas apertam até que a única palavra que você ainda pode jogar <em>é</em> a resposta. A armadilha fecha sozinha.',
     'help.winTitle': 'Como você vence',
-    'help.win': 'Sobreviva às cinco tentativas. Desvie por cinco rodadas e você escapa.',
+    'help.win': 'Sobreviva às seis tentativas. Desvie por seis rodadas e você escapa.',
     'help.tip':
       '<strong>A armadilha:</strong> desviar com letras raras parece seguro, mas cada letra cinza que você queima é uma palavra a menos para onde fugir. Jogue seguro demais e você fica sem saída.',
     'help.fineprint': 'As tentativas precisam ser palavras comuns de cinco letras.',
@@ -122,7 +122,7 @@ const STRINGS = {
     'toast.or': 'ou',
 
     'end.survived': 'Sobreviveu',
-    'end.survivedBody': 'Cinco tentativas, e você nunca encostou em <b>{word}</b>.',
+    'end.survivedBody': 'Seis tentativas, e você nunca encostou em <b>{word}</b>.',
     'end.found': 'Você acertou',
     'end.foundBody': 'A palavra era <b>{word}</b>. Era justamente o que você tinha que evitar.',
     'end.cornered': 'Encurralado',
@@ -142,7 +142,7 @@ const STRINGS = {
     'app.title': 'WORDLE REVERSED',
     'app.tagline': 'Wordle, backwards',
     'app.description':
-      'Wordle Reversed: the goal is to NOT find the word. Survive five guesses without being cornered into the answer.',
+      'Wordle Reversed: the goal is to NOT find the word. Survive six guesses without being cornered into the answer.',
 
     'header.help': 'How to play',
     'header.stats': 'Statistics',
@@ -155,7 +155,7 @@ const STRINGS = {
     'status.poolTitle': 'How many words you could still legally play',
 
     'help.title': 'How To Play',
-    'help.lede': 'Guess the word <em>five times</em>. Whatever you do, <strong>don\'t find it.</strong>',
+    'help.lede': 'Guess the word <em>six times</em>. Whatever you do, <strong>don\'t find it.</strong>',
     'help.intro':
       'Every guess is marked exactly like normal Wordle. The difference is that here the marks give orders: <strong>your next guess has to obey them.</strong>',
     'help.rule.locked':
@@ -180,7 +180,7 @@ const STRINGS = {
     'help.lose.cornered':
       '<strong>You get cornered.</strong> The locks and the dead letters squeeze until the only word you are still allowed to play <em>is</em> the answer. The trap closes on its own.',
     'help.winTitle': 'How you win',
-    'help.win': 'Survive all five guesses. Dodge for five turns and you walk away.',
+    'help.win': 'Survive all six guesses. Dodge for six turns and you walk away.',
     'help.tip':
       '<strong>The trap:</strong> dodging with obscure letters feels safe, but every gray letter you burn is one less word you can escape into. Play too safe and you\'ll run out of room.',
     'help.fineprint': 'Guesses must be common five-letter words.',
@@ -245,7 +245,7 @@ const STRINGS = {
     'toast.or': 'or',
 
     'end.survived': 'Survived',
-    'end.survivedBody': 'Five guesses, and you never touched <b>{word}</b>.',
+    'end.survivedBody': 'Six guesses, and you never touched <b>{word}</b>.',
     'end.found': 'You found it',
     'end.foundBody': 'The word was <b>{word}</b>. That was the one thing you had to avoid.',
     'end.cornered': 'Cornered',

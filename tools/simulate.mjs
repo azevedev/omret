@@ -93,10 +93,10 @@ const ANSWER_SET = new Set(ANSWERS);
 const STRICT = { strictRequired: true };
 
 const VARIANTS = [
-  { label: '5 common + all-move', guesses: 5, list: ANSWERS, set: ANSWER_SET, opts: STRICT },
-  { label: '5 common, lenient', guesses: 5, list: ANSWERS, set: ANSWER_SET, opts: {} },
-  { label: '5 full dict + all-move', guesses: 5, list: VALID_LIST, set: VALID, opts: STRICT },
   { label: '6 common + all-move', guesses: 6, list: ANSWERS, set: ANSWER_SET, opts: STRICT },
+  { label: '6 common, lenient', guesses: 6, list: ANSWERS, set: ANSWER_SET, opts: {} },
+  { label: '6 full dict + all-move', guesses: 6, list: VALID_LIST, set: VALID, opts: STRICT },
+  { label: '5 common + all-move', guesses: 5, list: ANSWERS, set: ANSWER_SET, opts: STRICT },
 ];
 
 console.log(`OMRET — balance simulation (${LOCALE === 'en' ? 'English' : 'Português'})`);
