@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="{{LANG}}" data-locale="{{LOCALE}}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<meta name="description" content="{{DESCRIPTION}}">
+<meta name="theme-color" content="#121213">
+<title>{{TITLE}}</title>
+<link rel="stylesheet" href="../css/style.css">
+<link rel="alternate" hreflang="pt-BR" href="../pt-br/">
+<link rel="alternate" hreflang="en-US" href="../eng-us/">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='4' fill='%23d33c4e'/></svg>">
+</head>
+<body>
+
+<header class="header">
+  <button class="icon-btn" id="btn-help" data-i18n-aria="header.help" data-i18n-title="header.help">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm0 16.5a1.2 1.2 0 110-2.4 1.2 1.2 0 010 2.4zm1.6-6.1c-.7.5-.9.8-.9 1.4v.4h-1.5v-.5c0-1.2.5-1.9 1.4-2.5.8-.6 1.1-.9 1.1-1.5 0-.7-.5-1.2-1.4-1.2-.8 0-1.4.4-1.7 1.2l-1.4-.6C9.6 7.6 10.6 7 12.1 7c1.7 0 3 1 3 2.5 0 1.2-.6 1.8-1.5 2.4z"/></svg>
+  </button>
+
+  <h1 class="title">{{HEADING}}</h1>
+
+  <div class="header-right">
+    <button class="icon-btn" id="btn-stats" data-i18n-aria="header.stats" data-i18n-title="header.stats">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h3V10H4v10zm6.5 0h3V4h-3v16zm6.5 0h3v-7h-3v7z"/></svg>
+    </button>
+    <button class="icon-btn" id="btn-settings" data-i18n-aria="header.settings" data-i18n-title="header.settings">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.4 13a7.8 7.8 0 000-2l2.1-1.6a.5.5 0 00.1-.6l-2-3.5a.5.5 0 00-.6-.2l-2.5 1a7.3 7.3 0 00-1.7-1l-.4-2.6a.5.5 0 00-.5-.4h-4a.5.5 0 00-.5.4l-.4 2.6a7.3 7.3 0 00-1.7 1l-2.5-1a.5.5 0 00-.6.2l-2 3.5a.5.5 0 00.1.6L4.6 11a7.8 7.8 0 000 2l-2.1 1.6a.5.5 0 00-.1.6l2 3.5a.5.5 0 00.6.2l2.5-1a7.3 7.3 0 001.7 1l.4 2.6a.5.5 0 00.5.4h4a.5.5 0 00.5-.4l.4-2.6a7.3 7.3 0 001.7-1l2.5 1a.5.5 0 00.6-.2l2-3.5a.5.5 0 00-.1-.6L19.4 13zM12 15.5a3.5 3.5 0 110-7 3.5 3.5 0 010 7z"/></svg>
+    </button>
+  </div>
+</header>
+
+<main class="main">
+  <div class="status-bar">
+    <span class="status-pill" id="status-mode"></span>
+    <span class="status-pill" id="status-pool" data-i18n-title="status.poolTitle"></span>
+    <span class="pool-delta" id="pool-delta" hidden></span>
+  </div>
+
+  <div class="board-wrap">
+    <div class="board" id="board" role="grid"></div>
+  </div>
+</main>
+
+<div class="keyboard" id="keyboard" role="group"></div>
+
+<aside class="wordpanel" id="wordpanel" hidden>
+  <div class="wordpanel-head">
+    <button class="wp-close" id="wp-close" data-i18n-aria="panel.close">&times;</button>
+    <div class="wordpanel-title">
+      <span data-i18n="panel.title"></span>
+      <span class="wordpanel-tag" data-i18n="panel.tag"></span>
+    </div>
+    <div class="wordpanel-counts">
+      <span class="wp-alive-n" id="wp-alive">0</span> <span data-i18n="panel.alive"></span>
+      <span class="wp-sep">·</span>
+      <span class="wp-dead-n" id="wp-dead">0</span> <span data-i18n="panel.dead"></span>
+    </div>
+  </div>
+  <div class="wordpanel-list" id="wp-list"></div>
+</aside>
+
+<div class="doom-veil" id="doom-veil"></div>
+<div class="toaster" id="toaster" role="status" aria-live="polite"></div>
+
+<!-- ── How to play ─────────────────────────────────────────────────────── -->
+<div class="modal-backdrop" id="modal-help" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="help-title">
+    <button class="modal-close" data-close aria-label="&times;">&times;</button>
+    <h2 id="help-title" data-i18n="help.title"></h2>
+    <p class="lede" data-i18n-html="help.lede"></p>
+    <p data-i18n-html="help.intro"></p>
+
+    <div class="rule">
+      <div class="mini-row">
+        <div class="mini locked">C</div><div class="mini">R</div><div class="mini">A</div><div class="mini">N</div><div class="mini">E</div>
+      </div>
+      <p data-i18n-html="help.rule.locked"></p>
+    </div>
+
+    <div class="rule">
+      <div class="mini-row">
+        <div class="mini">P</div><div class="mini required">I</div><div class="mini">L</div><div class="mini">O</div><div class="mini">T</div>
+      </div>
+      <p data-i18n-html="help.rule.required"></p>
+    </div>
+
+    <div class="rule">
+      <div class="mini-row">
+        <div class="mini">M</div><div class="mini">U</div><div class="mini banned">S</div><div class="mini">K</div><div class="mini">Y</div>
+      </div>
+      <p data-i18n-html="help.rule.banned"></p>
+    </div>
+
+    <div class="rule">
+      <div class="mini-row">
+        <div class="mini locked">R</div><div class="mini locked">E</div><div class="mini">F</div><div class="mini">E</div><div class="mini spent">R</div>
+      </div>
+      <p data-i18n-html="help.rule.spent"></p>
+    </div>
+
+    <h3 data-i18n="help.loseTitle"></h3>
+    <ul class="how-lose">
+      <li data-i18n-html="help.lose.found"></li>
+      <li data-i18n-html="help.lose.cornered"></li>
+    </ul>
+
+    <h3 data-i18n="help.winTitle"></h3>
+    <p data-i18n="help.win"></p>
+
+    <p class="tip" data-i18n-html="help.tip"></p>
+    <p class="fineprint" data-i18n="help.fineprint"></p>
+    <button class="btn-primary" data-close data-i18n="help.cta"></button>
+  </div>
+</div>
+
+<!-- ── Statistics ──────────────────────────────────────────────────────── -->
+<div class="modal-backdrop" id="modal-stats" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="stats-title">
+    <button class="modal-close" data-close aria-label="&times;">&times;</button>
+    <h2 id="stats-title" data-i18n="stats.title"></h2>
+
+    <div class="stats-row" id="stats-row"></div>
+
+    <h3 data-i18n="stats.distTitle"></h3>
+    <p class="dist-note" data-i18n="stats.distNote"></p>
+    <div class="dist" id="dist"></div>
+
+    <div class="endgame" id="endgame" hidden>
+      <div class="endgame-msg" id="endgame-msg"></div>
+      <div class="endgame-actions">
+        <div class="countdown" id="countdown" hidden>
+          <div class="countdown-label" data-i18n="stats.nextPuzzle"></div>
+          <div class="countdown-clock" id="countdown-clock">--:--:--</div>
+        </div>
+        <button class="btn-share" id="btn-share">
+          <span data-i18n="stats.share"></span>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 16.1c-.8 0-1.5.3-2 .8l-7.1-4.2c.1-.2.1-.5.1-.7s0-.5-.1-.7L16 7.1c.5.5 1.2.8 2 .8a2.9 2.9 0 100-5.8 2.9 2.9 0 00-2.9 2.9c0 .2 0 .5.1.7L8.1 9.9c-.5-.5-1.2-.8-2-.8a2.9 2.9 0 100 5.8c.8 0 1.5-.3 2-.8l7.2 4.2c-.1.2-.1.4-.1.7 0 1.6 1.3 2.8 2.8 2.8s2.9-1.3 2.9-2.9-1.3-2.8-2.9-2.8z"/></svg>
+        </button>
+      </div>
+      <button class="btn-secondary" id="btn-practice" data-i18n="stats.practice"></button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Settings ────────────────────────────────────────────────────────── -->
+<div class="modal-backdrop" id="modal-settings" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+    <button class="modal-close" data-close aria-label="&times;">&times;</button>
+    <h2 id="settings-title" data-i18n="settings.title"></h2>
+
+    <div class="setting">
+      <div>
+        <div class="setting-name" data-i18n="settings.language"></div>
+        <div class="setting-desc" data-i18n="settings.languageDesc"></div>
+      </div>
+      <div class="lang-switch" id="lang-switch"></div>
+    </div>
+
+    <div class="setting">
+      <div><div class="setting-name" data-i18n="settings.dark"></div></div>
+      <button class="switch" id="opt-dark" role="switch"><span></span></button>
+    </div>
+
+    <div class="setting">
+      <div>
+        <div class="setting-name" data-i18n="settings.pool"></div>
+        <div class="setting-desc" data-i18n="settings.poolDesc"></div>
+      </div>
+      <button class="switch" id="opt-pool" role="switch"><span></span></button>
+    </div>
+
+    <div class="setting">
+      <div>
+        <div class="setting-name" data-i18n="settings.common"></div>
+        <div class="setting-desc" data-i18n="settings.commonDesc"></div>
+      </div>
+      <button class="switch" id="opt-common" role="switch"><span></span></button>
+    </div>
+
+    <div class="setting">
+      <div>
+        <div class="setting-name" data-i18n="settings.strict"></div>
+        <div class="setting-desc" data-i18n="settings.strictDesc"></div>
+      </div>
+      <button class="switch" id="opt-strict" role="switch"><span></span></button>
+    </div>
+
+    <div class="setting">
+      <div>
+        <div class="setting-name" data-i18n="settings.wordlist"></div>
+        <div class="setting-desc" data-i18n="settings.wordlistDesc"></div>
+      </div>
+      <button class="switch" id="opt-wordlist" role="switch"><span></span></button>
+    </div>
+
+    <div class="setting">
+      <div>
+        <div class="setting-name" data-i18n="settings.contrast"></div>
+        <div class="setting-desc" data-i18n="settings.contrastDesc"></div>
+      </div>
+      <button class="switch" id="opt-contrast" role="switch"><span></span></button>
+    </div>
+
+    <div class="setting">
+      <div>
+        <div class="setting-name" data-i18n="settings.practice"></div>
+        <div class="setting-desc" data-i18n="settings.practiceDesc"></div>
+      </div>
+      <button class="switch" id="opt-practice" role="switch"><span></span></button>
+    </div>
+
+    <p class="fineprint" data-i18n="settings.fineprint"></p>
+  </div>
+</div>
+
+<script type="module" src="../js/game.js"></script>
+</body>
+</html>

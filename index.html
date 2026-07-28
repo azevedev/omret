@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="OMRET — o objetivo é NÃO descobrir a palavra. / Wordle Reversed — the goal is to NOT find the word.">
+<meta name="theme-color" content="#121213">
+<title>OMRET</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='4' fill='%23d33c4e'/></svg>">
+<link rel="alternate" hreflang="pt-BR" href="pt-br/">
+<link rel="alternate" hreflang="en-US" href="eng-us/">
+<link rel="alternate" hreflang="x-default" href="./">
+<style>
+  :root { color-scheme: dark; }
+
+  * { box-sizing: border-box; }
+
+  html, body { height: 100%; margin: 0; }
+
+  body {
+    background: #121213;
+    color: #fff;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Hidden until we know we're not about to redirect, so a returning player
+     never sees the chooser flash on screen. */
+  .wrap { width: min(440px, 100%); text-align: center; visibility: hidden; }
+  .wrap.ready { visibility: visible; }
+
+  .mark {
+    font-size: clamp(38px, 12vw, 60px);
+    font-weight: 700;
+    letter-spacing: .02em;
+    margin: 0;
+    line-height: 1;
+  }
+
+  .mark span { color: #d33c4e; font-style: italic; }
+
+  .sub {
+    color: #818384;
+    font-size: 14px;
+    margin: 10px 0 0;
+    line-height: 1.5;
+  }
+
+  .tiles {
+    display: flex;
+    justify-content: center;
+    gap: 5px;
+    margin: 30px 0 34px;
+  }
+
+  .t {
+    width: 44px; height: 44px;
+    display: grid;
+    place-items: center;
+    font-weight: 700;
+    font-size: 22px;
+    border: 2px solid #3a3a3c;
+    animation: drop .45s ease backwards;
+  }
+
+  .t.red { background: #d33c4e; border-color: #d33c4e; }
+  .t.amber { background: #c8871f; border-color: #c8871f; }
+  .t:nth-child(1) { animation-delay: .05s; }
+  .t:nth-child(2) { animation-delay: .12s; }
+  .t:nth-child(3) { animation-delay: .19s; }
+  .t:nth-child(4) { animation-delay: .26s; }
+  .t:nth-child(5) { animation-delay: .33s; }
+
+  @keyframes drop {
+    from { opacity: 0; transform: translateY(-14px) scale(.9); }
+    to   { opacity: 1; transform: none; }
+  }
+
+  .ask {
+    font-size: 12px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: #818384;
+    margin: 0 0 14px;
+  }
+
+  .langs { display: grid; gap: 10px; }
+
+  .lang {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    width: 100%;
+    padding: 16px 18px;
+    background: transparent;
+    border: 2px solid #3a3a3c;
+    border-radius: 8px;
+    color: #fff;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+    text-align: left;
+    text-decoration: none;
+    transition: border-color .15s, background-color .15s, transform .1s;
+  }
+
+  .lang:hover, .lang:focus-visible { border-color: #d33c4e; background: rgba(211, 60, 78, .1); }
+  .lang:active { transform: scale(.99); }
+
+  .lang-name { font-size: 16px; }
+  .lang-note { display: block; font-size: 12px; font-weight: 400; color: #818384; margin-top: 3px; }
+  .lang-tag { font-size: 11px; letter-spacing: .1em; color: #818384; white-space: nowrap; }
+
+  .foot { margin-top: 26px; font-size: 12px; color: #818384; line-height: 1.6; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .t { animation: none; }
+  }
+</style>
+</head>
+<body>
+
+<main class="wrap" id="wrap">
+  <h1 class="mark">OM<span>RET</span></h1>
+  <p class="sub">
+    O jogo de palavras em que você precisa <strong>errar</strong>.<br>
+    The word game where you have to <strong>miss</strong>.
+  </p>
+
+  <div class="tiles" aria-hidden="true">
+    <div class="t red">O</div>
+    <div class="t">M</div>
+    <div class="t amber">R</div>
+    <div class="t">E</div>
+    <div class="t">T</div>
+  </div>
+
+  <p class="ask">Idioma · Language</p>
+
+  <div class="langs">
+    <a class="lang" href="pt-br/" data-locale="pt-BR">
+      <span>
+        <span class="lang-name">Português (Brasil)</span>
+        <span class="lang-note">Jogue OMRET com palavras em português</span>
+      </span>
+      <span class="lang-tag">PT-BR</span>
+    </a>
+
+    <a class="lang" href="eng-us/" data-locale="en-US">
+      <span>
+        <span class="lang-name">English (US)</span>
+        <span class="lang-note">Play Wordle Reversed with English words</span>
+      </span>
+      <span class="lang-tag">EN-US</span>
+    </a>
+  </div>
+
+  <p class="foot">
+    Sua escolha fica salva neste aparelho.<br>
+    Your choice is saved on this device.
+  </p>
+</main>
+
+<script>
+  (function () {
+    var KEY = 'omret/locale';
+    var PATHS = { 'pt-BR': 'pt-br/', 'en-US': 'eng-us/' };
+
+    // ?ask=1 forces the chooser back for someone who wants to switch here.
+    var forceAsk = /[?&]ask=1\b/.test(location.search);
+
+    var saved = null;
+    try { saved = localStorage.getItem(KEY); } catch (e) { /* storage blocked */ }
+
+    if (!forceAsk && saved && PATHS[saved]) {
+      location.replace(PATHS[saved]);
+      return;
+    }
+
+    document.getElementById('wrap').classList.add('ready');
+
+    Array.prototype.forEach.call(document.querySelectorAll('.lang'), function (a) {
+      a.addEventListener('click', function () {
+        try { localStorage.setItem(KEY, a.dataset.locale); } catch (e) { /* ignore */ }
+      });
+    });
+  })();
+</script>
+</body>
+</html>

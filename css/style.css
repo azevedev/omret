@@ -1,0 +1,976 @@
+/* Wordle Reversed — visual clone of Wordle with an inverted mark palette.
+   Red = locked (dangerous), amber = required, gray = spent but safe. */
+
+:root {
+  --bg: #121213;
+  --fg: #ffffff;
+  --fg-dim: #818384;
+  --border: #3a3a3c;
+  --border-strong: #565758;
+  --tile-empty-border: #3a3a3c;
+  --tile-filled-border: #565758;
+  --key-bg: #818384;
+  --key-fg: #ffffff;
+  --modal-bg: #121213;
+  --overlay: rgba(0, 0, 0, .6);
+
+  /* Inverted marks */
+  --locked: #d33c4e;      /* was green — now danger */
+  --required: #c8871f;    /* was yellow — now obligation */
+  --banned: #3a3a3c;      /* spent */
+
+  --toast-bg: #ffffff;
+  --toast-fg: #121213;
+
+  --header-h: 50px;
+  --keyboard-h: 200px;
+}
+
+:root[data-theme="light"] {
+  --bg: #ffffff;
+  --fg: #1a1a1b;
+  --fg-dim: #787c7e;
+  --border: #d3d6da;
+  --border-strong: #878a8c;
+  --tile-empty-border: #d3d6da;
+  --tile-filled-border: #878a8c;
+  --key-bg: #d3d6da;
+  --key-fg: #1a1a1b;
+  --modal-bg: #ffffff;
+  --overlay: rgba(255, 255, 255, .7);
+  --banned: #787c7e;
+  --toast-bg: #1a1a1b;
+  --toast-fg: #ffffff;
+}
+
+:root[data-contrast="high"] {
+  --locked: #f5793a;
+  --required: #85c0f9;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  display: flex;
+  flex-direction: column;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Header ──────────────────────────────────────────────────────────── */
+
+.header {
+  height: var(--header-h);
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.title {
+  font-family: "Helvetica Neue", Arial, sans-serif;
+  font-weight: 700;
+  font-size: clamp(18px, 5.5vw, 30px);
+  letter-spacing: .01em;
+  margin: 0;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.title span {
+  color: var(--locked);
+  font-style: italic;
+}
+
+.header-right { display: flex; gap: 2px; }
+
+.icon-btn {
+  background: none;
+  border: 0;
+  padding: 4px;
+  cursor: pointer;
+  color: var(--fg);
+  display: grid;
+  place-items: center;
+  border-radius: 4px;
+}
+
+.icon-btn:hover { background: color-mix(in srgb, var(--fg) 12%, transparent); }
+.icon-btn svg { width: 24px; height: 24px; fill: currentColor; }
+
+/* ── Main / board ────────────────────────────────────────────────────── */
+
+.main {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.status-bar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 6px 0 2px;
+  flex: 0 0 auto;
+}
+
+.status-pill {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--fg-dim);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 3px 10px;
+}
+
+/* The pool counter escalates as the trap closes: colour, weight, size and
+   pulse all ramp up together so peripheral vision catches it. */
+#status-pool {
+  transition: color .3s, border-color .3s, background-color .3s, transform .2s;
+}
+
+#status-pool[data-level="caution"] {
+  color: var(--required);
+  border-color: color-mix(in srgb, var(--required) 55%, transparent);
+}
+
+#status-pool[data-level="warn"] {
+  color: #fff;
+  background: color-mix(in srgb, var(--required) 80%, transparent);
+  border-color: var(--required);
+}
+
+#status-pool[data-level="danger"] {
+  color: #fff;
+  background: var(--locked);
+  border-color: var(--locked);
+  font-size: 12px;
+  animation: pool-pulse 1.4s ease-in-out infinite;
+}
+
+#status-pool[data-level="critical"] {
+  color: #fff;
+  background: var(--locked);
+  border-color: var(--locked);
+  font-size: 13px;
+  letter-spacing: .1em;
+  padding: 4px 14px;
+  animation: pool-pulse .7s ease-in-out infinite;
+}
+
+@keyframes pool-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--locked) 70%, transparent); }
+  50%      { box-shadow: 0 0 0 7px color-mix(in srgb, var(--locked) 0%, transparent); }
+}
+
+/* Bump the pill when the number changes. */
+#status-pool.bump { animation: pool-bump .45s ease; }
+
+@keyframes pool-bump {
+  0%   { transform: scale(1); }
+  35%  { transform: scale(1.22); }
+  100% { transform: scale(1); }
+}
+
+/* "−1,983" floats up beside the pill, showing what the last guess destroyed. */
+.pool-delta {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--locked);
+  animation: delta-float 1.6s ease forwards;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.pool-delta[hidden] { display: none; }
+
+@keyframes delta-float {
+  0%   { opacity: 0; transform: translateY(4px); }
+  15%  { opacity: 1; transform: translateY(0); }
+  70%  { opacity: 1; transform: translateY(-2px); }
+  100% { opacity: 0; transform: translateY(-10px); }
+}
+
+.status-pill.danger {
+  color: var(--locked);
+  border-color: var(--locked);
+}
+
+.board-wrap {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 8px;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.board {
+  display: grid;
+  grid-template-rows: repeat(var(--rows, 5), 1fr);
+  gap: 5px;
+  padding: 8px;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 5px;
+}
+
+.tile {
+  width: 100%;
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  font-size: clamp(20px, 7vw, 32px);
+  font-weight: 700;
+  text-transform: uppercase;
+  line-height: 1;
+  user-select: none;
+  color: var(--fg);
+  border: 2px solid var(--tile-empty-border);
+  background: transparent;
+  transition: border-color .1s, background-color .1s;
+}
+
+.tile[data-state="filled"] {
+  border-color: var(--tile-filled-border);
+  animation: pop .1s ease-in-out;
+}
+
+.tile[data-state="locked"]   { background: var(--locked);   border-color: var(--locked);   color: #fff; }
+.tile[data-state="required"] { background: var(--required); border-color: var(--required); color: #fff; }
+.tile[data-state="banned"]   { background: var(--banned);   border-color: var(--banned);   color: #fff; }
+
+/* Gray, but the letter is NOT dead — it just has no further copies in the
+   solution. Hatched so it can't be mistaken for an eliminated letter. */
+.tile[data-state="spent"] {
+  border-color: var(--banned);
+  color: color-mix(in srgb, var(--fg) 62%, transparent);
+  background:
+    repeating-linear-gradient(
+      -45deg,
+      var(--banned) 0 6px,
+      color-mix(in srgb, var(--banned) 62%, transparent) 6px 12px
+    );
+}
+
+/* A green letter carried forward into a future row: pinned, uneditable. */
+.tile[data-state="pinned"] {
+  border-color: var(--locked);
+  color: var(--locked);
+  background: color-mix(in srgb, var(--locked) 14%, transparent);
+  position: relative;
+}
+
+.tile[data-state="pinned"]::after {
+  content: "";
+  position: absolute;
+  top: 3px; right: 3px;
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--locked);
+  opacity: .8;
+}
+
+@keyframes pop {
+  from { transform: scale(.9); opacity: 0; }
+  40%  { transform: scale(1.06); opacity: 1; }
+  to   { transform: scale(1); }
+}
+
+.tile.flip { animation: flip .5s ease forwards; }
+
+@keyframes flip {
+  0%   { transform: rotateX(0); }
+  45%  { transform: rotateX(90deg); }
+  55%  { transform: rotateX(90deg); }
+  100% { transform: rotateX(0); }
+}
+
+.row.shake { animation: shake .6s; }
+
+@keyframes shake {
+  10%, 90% { transform: translateX(-1px); }
+  20%, 80% { transform: translateX(2px); }
+  30%, 50%, 70% { transform: translateX(-4px); }
+  40%, 60% { transform: translateX(4px); }
+}
+
+.tile.bounce { animation: bounce .8s; }
+
+@keyframes bounce {
+  0%, 20%   { transform: translateY(0); }
+  40%       { transform: translateY(-24px); }
+  50%       { transform: translateY(4px); }
+  60%       { transform: translateY(-12px); }
+  80%       { transform: translateY(2px); }
+  100%      { transform: translateY(0); }
+}
+
+/* ── Keyboard ────────────────────────────────────────────────────────── */
+
+.keyboard {
+  flex: 0 0 auto;
+  height: var(--keyboard-h);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 8px;
+  padding: 8px 6px max(8px, env(safe-area-inset-bottom));
+  max-width: 500px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.kb-row {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  flex: 1 1 0;
+  touch-action: manipulation;
+}
+
+.key {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: 0;
+  border-radius: 4px;
+  background: var(--key-bg);
+  color: var(--key-fg);
+  font-family: inherit;
+  font-weight: 700;
+  font-size: clamp(11px, 3.4vw, 13px);
+  text-transform: uppercase;
+  cursor: pointer;
+  user-select: none;
+  display: grid;
+  place-items: center;
+  transition: background-color .15s, color .15s, opacity .15s;
+}
+
+.key.wide { flex: 1.6 1 auto; font-size: 11px; }
+.key:active { transform: scale(.96); }
+.key svg { width: 22px; height: 22px; fill: currentColor; }
+
+.key[data-state="locked"]   { background: var(--locked);   color: #fff; }
+.key[data-state="required"] { background: var(--required); color: #fff; }
+
+.key[data-state="banned"] {
+  background: var(--banned);
+  color: color-mix(in srgb, #fff 45%, transparent);
+  position: relative;
+}
+
+/* Pressing a dead letter: the key refuses, flashing danger-red and shaking.
+   Nothing is entered into the row. */
+.key.reject {
+  animation: key-reject .4s ease;
+  z-index: 1;
+}
+
+@keyframes key-reject {
+  0%   { transform: translateX(0);    background-color: var(--locked); box-shadow: 0 0 0 3px var(--locked); }
+  20%  { transform: translateX(-5px); background-color: var(--locked); box-shadow: 0 0 0 3px var(--locked); }
+  40%  { transform: translateX(5px);  background-color: var(--locked); box-shadow: 0 0 0 3px var(--locked); }
+  60%  { transform: translateX(-3px); background-color: var(--locked); box-shadow: 0 0 0 2px var(--locked); }
+  80%  { transform: translateX(3px);  background-color: var(--locked); box-shadow: 0 0 0 1px var(--locked); }
+  100% { transform: translateX(0);    background-color: var(--banned); box-shadow: none; }
+}
+
+/* The row flinches too, so the cue is visible even when the player's eyes are
+   on the board rather than the keyboard. */
+.row.reject { animation: row-reject .3s ease; }
+
+@keyframes row-reject {
+  0%, 100% { transform: translateX(0); }
+  25%      { transform: translateX(-3px); }
+  75%      { transform: translateX(3px); }
+}
+
+.key[data-state="banned"]::after {
+  content: "";
+  position: absolute;
+  left: 18%; right: 18%;
+  height: 2px;
+  background: currentColor;
+  opacity: .7;
+  transform: rotate(-12deg);
+}
+
+/* ── The trap closing ────────────────────────────────────────────────── */
+
+/* Red closes in from the edges as the forced word is spelled out. */
+.doom-veil {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 1.1s ease;
+  background: radial-gradient(
+    ellipse at center,
+    transparent 30%,
+    color-mix(in srgb, var(--locked) 12%, transparent) 62%,
+    color-mix(in srgb, var(--locked) 52%, transparent) 100%
+  );
+}
+
+.doom-veil.on { opacity: 1; }
+
+/* Each letter is slammed into place. */
+.tile.slam { animation: slam .3s cubic-bezier(.2, .8, .3, 1.3); }
+
+@keyframes slam {
+  0%   { transform: scale(2.4); opacity: 0; filter: blur(3px); }
+  55%  { transform: scale(.88); opacity: 1; filter: blur(0); }
+  75%  { transform: scale(1.06); }
+  100% { transform: scale(1); }
+}
+
+/* The board takes the hit. */
+.board.jolt { animation: jolt .17s ease; }
+
+@keyframes jolt {
+  0%, 100% { transform: translateY(0); }
+  35%      { transform: translateY(4px); }
+  70%      { transform: translateY(-3px); }
+}
+
+/* Then the letters turn, one by one. */
+.tile.doom {
+  background: var(--locked);
+  border-color: var(--locked);
+  color: #fff;
+  animation: doom-turn .42s ease;
+  box-shadow: 0 0 20px color-mix(in srgb, var(--locked) 65%, transparent);
+}
+
+@keyframes doom-turn {
+  0%   { transform: rotateX(0); }
+  50%  { transform: rotateX(90deg); }
+  100% { transform: rotateX(0); }
+}
+
+.row.doom-pulse { animation: doom-pulse 1.15s ease-in-out 2; }
+
+@keyframes doom-pulse {
+  0%, 100% { transform: scale(1);     filter: brightness(1); }
+  50%      { transform: scale(1.045); filter: brightness(1.4); }
+}
+
+/* ── Toasts ──────────────────────────────────────────────────────────── */
+
+.toaster {
+  position: fixed;
+  top: calc(var(--header-h) + 12px);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  z-index: 40;
+  pointer-events: none;
+  width: max-content;
+  max-width: min(90vw, 420px);
+}
+
+.toast {
+  background: var(--toast-bg);
+  color: var(--toast-fg);
+  font-size: 14px;
+  font-weight: 700;
+  padding: 12px 16px;
+  border-radius: 4px;
+  text-align: center;
+  animation: toast-in .12s ease;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, .35);
+}
+
+.toast.fade { opacity: 0; transition: opacity .3s; }
+.toast b { color: var(--locked); }
+
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* ── Modals ──────────────────────────────────────────────────────────── */
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: var(--overlay);
+  display: grid;
+  place-items: center;
+  z-index: 50;
+  padding: 16px;
+  animation: fade-in .15s ease;
+}
+
+.modal-backdrop[hidden] { display: none; }
+
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+
+.modal {
+  background: var(--modal-bg);
+  color: var(--fg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  width: min(500px, 100%);
+  max-height: min(90vh, 720px);
+  overflow-y: auto;
+  padding: 16px 24px 28px;
+  position: relative;
+  animation: modal-in .2s cubic-bezier(.2, .9, .3, 1.2);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, .45);
+}
+
+@keyframes modal-in {
+  from { opacity: 0; transform: translateY(24px) scale(.97); }
+  to   { opacity: 1; transform: none; }
+}
+
+.modal-close {
+  position: absolute;
+  top: 8px; right: 12px;
+  background: none;
+  border: 0;
+  color: var(--fg);
+  font-size: 28px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 4px 8px;
+}
+
+.modal h2 {
+  text-align: center;
+  font-size: 16px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  margin: 8px 0 16px;
+}
+
+.modal h3 {
+  font-size: 13px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  margin: 22px 0 8px;
+  border-top: 1px solid var(--border);
+  padding-top: 14px;
+}
+
+.modal p, .modal li { font-size: 15px; line-height: 1.5; margin: 10px 0; }
+
+.lede { font-size: 17px !important; font-weight: 500; }
+.lede strong { color: var(--locked); }
+
+.rule { margin: 18px 0; }
+.rule p { margin: 8px 0 0; }
+
+.mini-row { display: flex; gap: 4px; }
+
+.mini {
+  width: 38px; height: 38px;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: 20px;
+  border: 2px solid var(--tile-filled-border);
+}
+
+.mini.locked   { background: var(--locked);   border-color: var(--locked);   color: #fff; }
+.mini.required { background: var(--required); border-color: var(--required); color: #fff; }
+.mini.banned   { background: var(--banned);   border-color: var(--banned);   color: #fff; }
+
+.mini.spent {
+  border-color: var(--banned);
+  color: color-mix(in srgb, var(--fg) 62%, transparent);
+  background: repeating-linear-gradient(
+    -45deg,
+    var(--banned) 0 6px,
+    color-mix(in srgb, var(--banned) 62%, transparent) 6px 12px
+  );
+}
+
+.how-lose { padding-left: 20px; margin: 8px 0; }
+.how-lose li { margin: 8px 0; }
+
+.tip {
+  border-left: 3px solid var(--required);
+  padding-left: 12px;
+  color: var(--fg-dim);
+}
+
+.fineprint { font-size: 12px !important; color: var(--fg-dim); text-align: center; }
+
+.btn-primary, .btn-secondary, .btn-share {
+  display: block;
+  width: 100%;
+  margin-top: 16px;
+  padding: 14px;
+  border: 0;
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  cursor: pointer;
+  background: var(--locked);
+  color: #fff;
+}
+
+.btn-secondary { background: transparent; color: var(--fg-dim); border: 1px solid var(--border); }
+
+.btn-share {
+  width: auto;
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 22px;
+}
+
+.btn-share svg { width: 18px; height: 18px; fill: currentColor; }
+
+/* ── Stats ───────────────────────────────────────────────────────────── */
+
+.stats-row { display: flex; justify-content: center; gap: 4px; }
+
+.stat { flex: 1; text-align: center; }
+.stat-num { font-size: 32px; font-weight: 400; line-height: 1.1; }
+.stat-label { font-size: 12px; line-height: 1.2; color: var(--fg-dim); }
+
+.dist-note { font-size: 12px !important; color: var(--fg-dim); margin-top: -4px !important; }
+.dist { display: flex; flex-direction: column; gap: 4px; }
+
+.dist-line { display: flex; align-items: center; gap: 6px; font-size: 14px; }
+.dist-line > span:first-child { width: 14px; text-align: right; }
+
+.dist-bar {
+  background: var(--border);
+  color: #fff;
+  font-weight: 700;
+  font-size: 13px;
+  padding: 2px 8px;
+  min-width: 22px;
+  text-align: right;
+  transition: width .4s ease;
+}
+
+.dist-bar.current { background: var(--locked); }
+
+.endgame { border-top: 1px solid var(--border); margin-top: 20px; padding-top: 16px; }
+
+.endgame-msg {
+  text-align: center;
+  font-size: 15px;
+  line-height: 1.5;
+  margin-bottom: 14px;
+}
+
+.endgame-msg strong { color: var(--locked); text-transform: uppercase; letter-spacing: .05em; }
+
+.endgame-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+
+.countdown { text-align: center; }
+.countdown-label { font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--fg-dim); }
+.countdown-clock { font-size: 26px; font-variant-numeric: tabular-nums; }
+
+/* ── Settings ────────────────────────────────────────────────────────── */
+
+.setting {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.setting-name { font-size: 15px; }
+.setting-desc { font-size: 12px; color: var(--fg-dim); margin-top: 2px; }
+
+.switch {
+  flex: 0 0 auto;
+  width: 44px; height: 24px;
+  border-radius: 999px;
+  border: 0;
+  background: var(--border-strong);
+  position: relative;
+  cursor: pointer;
+  transition: background-color .15s;
+}
+
+.switch span {
+  position: absolute;
+  top: 2px; left: 2px;
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform .15s;
+}
+
+.lang-switch { display: flex; gap: 6px; flex: 0 0 auto; }
+
+.lang-chip {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  padding: 7px 11px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--fg-dim);
+  text-decoration: none;
+  cursor: pointer;
+  transition: color .15s, border-color .15s, background-color .15s;
+}
+
+.lang-chip:hover { color: var(--fg); border-color: var(--border-strong); }
+
+.lang-chip[aria-current="true"] {
+  background: var(--locked);
+  border-color: var(--locked);
+  color: #fff;
+  cursor: default;
+}
+
+.switch[aria-checked="true"] { background: var(--locked); }
+.switch[aria-checked="true"] span { transform: translateX(20px); }
+
+/* ── Word pool panel (testing aid) ───────────────────────────────────── */
+
+.wordpanel {
+  position: fixed;
+  top: 0; right: 0; bottom: 0;
+  width: var(--panel-w, 240px);
+  border-left: 1px solid var(--border);
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  z-index: 30;
+  font-size: 12px;
+}
+
+.wordpanel[hidden] { display: none; }
+
+body.with-panel { padding-right: var(--panel-w, 240px); }
+
+.wordpanel-head {
+  flex: 0 0 auto;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.wordpanel-title {
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.wordpanel-tag {
+  font-size: 9px;
+  letter-spacing: .1em;
+  color: var(--bg);
+  background: var(--fg-dim);
+  border-radius: 3px;
+  padding: 2px 5px;
+}
+
+.wordpanel-counts {
+  margin-top: 4px;
+  color: var(--fg-dim);
+  font-variant-numeric: tabular-nums;
+}
+
+.wp-alive-n { color: var(--fg); font-weight: 700; }
+.wp-dead-n { color: var(--locked); font-weight: 700; }
+.wp-sep { opacity: .5; margin: 0 2px; }
+
+.wordpanel-list {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 6px 0 24px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  line-height: 1.5;
+  content-visibility: auto;
+}
+
+.wp-word {
+  padding: 1px 12px;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  color: var(--fg);
+}
+
+/* Killed by the most recent guess — flare red before settling. */
+.wp-word.just-died {
+  color: var(--locked);
+  text-decoration: line-through;
+  background: color-mix(in srgb, var(--locked) 18%, transparent);
+  animation: wp-die .9s ease forwards;
+}
+
+@keyframes wp-die {
+  0%   { background-color: color-mix(in srgb, var(--locked) 45%, transparent); }
+  100% { background-color: transparent; }
+}
+
+.wp-word.dead {
+  color: var(--fg-dim);
+  text-decoration: line-through;
+  opacity: .45;
+}
+
+.wp-word.solution-hint { font-weight: 700; }
+
+.wp-group {
+  padding: 8px 12px 3px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+  color: var(--fg-dim);
+  border-top: 1px solid var(--border);
+  margin-top: 6px;
+  position: sticky;
+  top: 0;
+  background: var(--bg);
+}
+
+.wp-close {
+  display: none;
+  position: absolute;
+  top: 6px; right: 8px;
+  background: none;
+  border: 0;
+  color: var(--fg);
+  font-size: 26px;
+  line-height: 1;
+  padding: 2px 8px;
+  cursor: pointer;
+}
+
+/* ── Responsive ──────────────────────────────────────────────────────── */
+
+/* Phones and small tablets: the pool becomes a bottom sheet you pull up by
+   tapping the "N words left" pill, so the info is still reachable without
+   stealing width from the board. */
+@media (max-width: 900px) {
+  body.with-panel { padding-right: 0; }
+
+  .wordpanel {
+    top: auto;
+    left: 0; right: 0; bottom: 0;
+    width: 100%;
+    height: min(62vh, 440px);
+    border-left: 0;
+    border-top: 1px solid var(--border);
+    border-radius: 14px 14px 0 0;
+    box-shadow: 0 -10px 34px rgba(0, 0, 0, .45);
+    transform: translateY(100%);
+    transition: transform .25s ease;
+    z-index: 45;
+  }
+
+  .wordpanel.open { transform: translateY(0); }
+
+  .wordpanel-head { position: relative; padding-top: 14px; }
+  .wp-close { display: block; }
+
+  /* Grab handle, so it reads as a sheet. */
+  .wordpanel-head::before {
+    content: "";
+    position: absolute;
+    top: 6px; left: 50%;
+    transform: translateX(-50%);
+    width: 34px; height: 4px;
+    border-radius: 2px;
+    background: var(--border-strong);
+  }
+
+  /* Signal that the counter opens the sheet. */
+  body.with-panel #status-pool { cursor: pointer; }
+  body.with-panel #status-pool::after { content: " ▾"; opacity: .7; }
+}
+
+/* Short landscape phones: stack board and keyboard side by side instead of
+   vertically, otherwise six rows have nowhere to go. */
+@media (max-height: 520px) and (orientation: landscape) {
+  :root { --header-h: 40px; --keyboard-h: 150px; }
+
+  body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(250px, 44%);
+    grid-template-rows: var(--header-h) minmax(0, 1fr);
+  }
+
+  .header { grid-column: 1 / -1; }
+  .main { grid-column: 1; grid-row: 2; min-height: 0; }
+
+  .keyboard {
+    grid-column: 2;
+    grid-row: 2;
+    align-self: center;
+    height: var(--keyboard-h);
+    padding: 6px 8px;
+  }
+
+  .status-bar { padding: 2px 0 0; }
+  .toaster { top: calc(var(--header-h) + 6px); }
+  .title { font-size: 17px; }
+
+  /* No room for a sheet on top of all this — and no affordance promising one. */
+  .wordpanel { display: none !important; }
+  body.with-panel #status-pool { cursor: default; }
+  body.with-panel #status-pool::after { content: none; }
+}
+
+@media (max-height: 680px) {
+  :root { --keyboard-h: 170px; }
+}
+
+@media (max-width: 380px) {
+  .modal { padding: 16px 16px 24px; }
+  .mini { width: 32px; height: 32px; font-size: 17px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}
