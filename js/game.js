@@ -68,11 +68,13 @@ const STORE_KEY = `omret/v1/${LOCALE}`;
 
 /**
  * Bumped when a rule change must override a setting already saved in a
- * player's browser. v2 made "every amber letter must move" the default: a
- * guess that quietly drops a known letter is exactly what this game is about
- * preventing, so requiring only one of them was the wrong default.
+ * player's browser.
+ *
+ *   v2  "every amber letter must move" became the default: a guess that quietly
+ *       drops a known letter is what this game exists to prevent.
+ *   v3  the full dictionary became the default guess pool.
  */
-const RULES_VERSION = 2;
+const RULES_VERSION = 3;
 const REVEAL_MS = 300;
 const FLIP_MS = 500;
 
@@ -83,7 +85,7 @@ const FLIP_MS = 500;
 const defaultSave = () => ({
   settings: {
     dark: true, pool: true, strict: true, contrast: false,
-    practice: false, commonOnly: true, wordList: true,
+    practice: false, commonOnly: false, wordList: true,
   },
   rulesVersion: RULES_VERSION,
   stats: {
@@ -112,10 +114,13 @@ function load() {
     merged.stats.dist = dist;
 
     // Re-apply rule defaults that changed since this save was written, without
-    // discarding the player's stats.
-    if ((parsed.rulesVersion || 1) < RULES_VERSION) {
-      merged.settings.strict = true;
-      merged.daily = null;          // an in-progress round may break the new rule
+    // discarding the player's stats. An in-progress round is dropped, since it
+    // may have been played under rules that no longer apply.
+    const saved = parsed.rulesVersion || 1;
+    if (saved < 2) merged.settings.strict = true;
+    if (saved < 3) merged.settings.commonOnly = false;
+    if (saved < RULES_VERSION) {
+      merged.daily = null;
       merged.rulesVersion = RULES_VERSION;
     }
     return merged;

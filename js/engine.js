@@ -12,11 +12,11 @@
  *                              it has to sit in a slot it has never occupied.
  *   BANNED   (Wordle gray)   — that letter is dead, you may never use it again.
  *
- * You win by surviving all six guesses without typing the solution.
+ * You win by surviving all five guesses without typing the solution.
  */
 
 export const WORD_LENGTH = 5;
-export const MAX_GUESSES = 6;
+export const MAX_GUESSES = 5;
 
 /**
  * When no legal word remains at all ("starved"), is that a loss?
@@ -31,7 +31,7 @@ export const STARVED_IS_LOSS = true;
 export const MARK = { LOCKED: 'locked', REQUIRED: 'required', BANNED: 'banned' };
 
 export const ENDING = {
-  SURVIVED: 'survived',   // win — six guesses, never typed the solution
+  SURVIVED: 'survived',   // win — five guesses, never typed the solution
   FOUND: 'found',         // loss — typed the solution
   CORNERED: 'cornered',   // loss — the solution was the only word left
   STARVED: 'starved',     // no legal word remained at all

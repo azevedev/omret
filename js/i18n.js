@@ -19,7 +19,7 @@ const STRINGS = {
     'app.title': 'OMRET',
     'app.tagline': 'Termo ao contrário',
     'app.description':
-      'OMRET: o objetivo é NÃO descobrir a palavra. Sobreviva a seis tentativas sem cair na resposta.',
+      'OMRET: o objetivo é NÃO descobrir a palavra. Sobreviva a cinco tentativas sem cair na resposta.',
 
     'header.help': 'Como jogar',
     'header.stats': 'Estatísticas',
@@ -32,7 +32,7 @@ const STRINGS = {
     'status.poolTitle': 'Quantas palavras você ainda pode jogar',
 
     'help.title': 'Como Jogar',
-    'help.lede': 'Adivinhe a palavra <em>seis vezes</em>. E, aconteça o que acontecer, <strong>não acerte.</strong>',
+    'help.lede': 'Adivinhe a palavra <em>cinco vezes</em>. E, aconteça o que acontecer, <strong>não acerte.</strong>',
     'help.intro':
       'Cada tentativa é marcada como no Termo normal. A diferença é que aqui as marcas mandam em você: <strong>a próxima jogada tem que obedecer a elas.</strong>',
     'help.rule.locked':
@@ -57,10 +57,10 @@ const STRINGS = {
     'help.lose.cornered':
       '<strong>Você fica encurralado.</strong> As travas e as letras mortas apertam até que a única palavra que você ainda pode jogar <em>é</em> a resposta. A armadilha fecha sozinha.',
     'help.winTitle': 'Como você vence',
-    'help.win': 'Sobreviva às seis tentativas. Desvie por seis rodadas e você escapa.',
+    'help.win': 'Sobreviva às cinco tentativas. Desvie por cinco rodadas e você escapa.',
     'help.tip':
       '<strong>A armadilha:</strong> desviar com letras raras parece seguro, mas cada letra cinza que você queima é uma palavra a menos para onde fugir. Jogue seguro demais e você fica sem saída.',
-    'help.fineprint': 'As tentativas precisam ser palavras comuns de cinco letras.',
+    'help.fineprint': 'As tentativas precisam ser palavras de cinco letras do dicionário.',
     'help.cta': 'Bora',
 
     'stats.title': 'Estatísticas',
@@ -82,7 +82,7 @@ const STRINGS = {
     'settings.poolDesc': 'Exibe quantas palavras você ainda pode jogar legalmente',
     'settings.common': 'Apenas palavras comuns',
     'settings.commonDesc':
-      'Limita as tentativas a cerca de 2.000 palavras do dia a dia. Desligue para liberar qualquer palavra do dicionário, o que deixa a fuga fácil demais.',
+      'Ligue para limitar as tentativas a cerca de 2.000 palavras do dia a dia. Desligado, vale qualquer palavra do dicionário, o que torna a fuga bem mais fácil.',
     'settings.strict': 'Toda âmbar precisa se mover',
     'settings.strictDesc':
       'Todas as letras âmbar precisam aparecer em toda tentativa, cada uma numa casa nova. Desligue para a regra branda, em que mover uma só já basta.',
@@ -125,7 +125,7 @@ const STRINGS = {
     'end.neverTyped': 'Você nunca digitou',
     'end.closest': 'No aperto máximo restavam só <b>{n}</b> palavras jogáveis, e você ainda desviou.',
     'end.closestOne': 'Chegou a restar <b>uma única</b> palavra jogável além da resposta.',
-    'end.survivedBody': 'Seis tentativas sem encostar nela.',
+    'end.survivedBody': 'Cinco tentativas sem encostar nela.',
     'end.found': 'Você acertou',
     'end.foundBody': 'A palavra era <b>{word}</b>. Era justamente o que você tinha que evitar.',
     'end.cornered': 'Encurralado',
@@ -145,7 +145,7 @@ const STRINGS = {
     'app.title': 'WORDLE REVERSED',
     'app.tagline': 'Wordle, backwards',
     'app.description':
-      'Wordle Reversed: the goal is to NOT find the word. Survive six guesses without being cornered into the answer.',
+      'Wordle Reversed: the goal is to NOT find the word. Survive five guesses without being cornered into the answer.',
 
     'header.help': 'How to play',
     'header.stats': 'Statistics',
@@ -158,7 +158,7 @@ const STRINGS = {
     'status.poolTitle': 'How many words you could still legally play',
 
     'help.title': 'How To Play',
-    'help.lede': 'Guess the word <em>six times</em>. Whatever you do, <strong>don\'t find it.</strong>',
+    'help.lede': 'Guess the word <em>five times</em>. Whatever you do, <strong>don\'t find it.</strong>',
     'help.intro':
       'Every guess is marked exactly like normal Wordle. The difference is that here the marks give orders: <strong>your next guess has to obey them.</strong>',
     'help.rule.locked':
@@ -183,10 +183,10 @@ const STRINGS = {
     'help.lose.cornered':
       '<strong>You get cornered.</strong> The locks and the dead letters squeeze until the only word you are still allowed to play <em>is</em> the answer. The trap closes on its own.',
     'help.winTitle': 'How you win',
-    'help.win': 'Survive all six guesses. Dodge for six turns and you walk away.',
+    'help.win': 'Survive all five guesses. Dodge for five turns and you walk away.',
     'help.tip':
       '<strong>The trap:</strong> dodging with obscure letters feels safe, but every gray letter you burn is one less word you can escape into. Play too safe and you\'ll run out of room.',
-    'help.fineprint': 'Guesses must be common five-letter words.',
+    'help.fineprint': 'Guesses must be five-letter words from the dictionary.',
     'help.cta': 'Let\'s go',
 
     'stats.title': 'Statistics',
@@ -208,7 +208,7 @@ const STRINGS = {
     'settings.poolDesc': 'Displays how many words you can still legally play',
     'settings.common': 'Common words only',
     'settings.commonDesc':
-      'Restricts guesses to everyday words. Turn it off to allow any dictionary word, which makes dodging much too easy.',
+      'Turn on to restrict guesses to everyday words. Off, any dictionary word counts, which makes dodging a good deal easier.',
     'settings.strict': 'Every amber must move',
     'settings.strictDesc':
       'All amber letters must appear in every guess, each in a new slot. Turn off for the lenient rule where moving any single one is enough.',
@@ -251,7 +251,7 @@ const STRINGS = {
     'end.neverTyped': 'You never typed',
     'end.closest': 'At the tightest, only <b>{n}</b> playable words were left, and you still dodged.',
     'end.closestOne': 'It came down to <b>one</b> playable word besides the answer.',
-    'end.survivedBody': 'Six guesses, and it never made it onto your board.',
+    'end.survivedBody': 'Five guesses, and it never made it onto your board.',
     'end.found': 'You found it',
     'end.foundBody': 'The word was <b>{word}</b>. That was the one thing you had to avoid.',
     'end.cornered': 'Cornered',

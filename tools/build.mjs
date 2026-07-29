@@ -53,7 +53,7 @@ const PAGES = [
     OG_ALT: 'OMRET. Vermelho trava a letra, âmbar obriga a movê-la, cinza mata.',
     HEADING: 'OM<span>RET</span>',
     DESCRIPTION:
-      'OMRET: o objetivo é NÃO descobrir a palavra. Sobreviva a seis tentativas sem cair na resposta.',
+      'OMRET: o objetivo é NÃO descobrir a palavra. Sobreviva a cinco tentativas sem cair na resposta.',
   },
   {
     dir: 'eng-us',
@@ -66,7 +66,7 @@ const PAGES = [
     OG_ALT: 'Wordle Reversed. Red locks the letter, amber forces it to move, gray kills it.',
     HEADING: 'WORDLE <span>REVERSED</span>',
     DESCRIPTION:
-      'Wordle Reversed: the goal is to NOT find the word. Survive six guesses without being cornered into the answer.',
+      'Wordle Reversed: the goal is to NOT find the word. Survive five guesses without being cornered into the answer.',
   },
 ];
 
