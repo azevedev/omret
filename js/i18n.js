@@ -24,6 +24,8 @@ const STRINGS = {
     'header.help': 'Como jogar',
     'header.stats': 'Estatísticas',
     'header.settings': 'Configurações',
+    'header.mute': 'Desligar o som',
+    'header.unmute': 'Ligar o som',
 
     'status.daily': 'Diário nº {n}',
     'status.practice': 'Treino',
@@ -152,6 +154,8 @@ const STRINGS = {
     'header.help': 'How to play',
     'header.stats': 'Statistics',
     'header.settings': 'Settings',
+    'header.mute': 'Mute sound',
+    'header.unmute': 'Unmute sound',
 
     'status.daily': 'Daily #{n}',
     'status.practice': 'Practice',

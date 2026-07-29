@@ -1029,6 +1029,13 @@ function applySettings() {
   $('opt-wordlist').setAttribute('aria-checked', String(s.wordList));
   $('opt-sound').setAttribute('aria-checked', String(s.sound));
   setSoundEnabled(s.sound);
+
+  // The corner button is a mute button, so pressed means silent.
+  const mute = $('btn-mute');
+  mute.setAttribute('aria-pressed', String(!s.sound));
+  const label = t(s.sound ? 'header.mute' : 'header.unmute');
+  mute.setAttribute('aria-label', label);
+  mute.title = label;
   $('opt-contrast').setAttribute('aria-checked', String(s.contrast));
   $('opt-practice').setAttribute('aria-checked', String(s.practice));
 
@@ -1114,6 +1121,13 @@ const restartForRuleChange = (whatKey) => () => {
 };
 
 bindSwitch('opt-sound', 'sound');
+
+$('btn-mute').addEventListener('click', () => {
+  store.settings.sound = !store.settings.sound;
+  save();
+  applySettings();
+  sfx.toggle(store.settings.sound);   // silent when muting, audible when unmuting
+});
 bindSwitch('opt-wordlist', 'wordList', () => { renderStatus(); sizeBoard(); });
 bindSwitch('opt-strict', 'strict', restartForRuleChange('toast.strictChanged'));
 bindSwitch('opt-common', 'commonOnly', restartForRuleChange('toast.dictChanged'));

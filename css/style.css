@@ -111,6 +111,38 @@ body {
 .icon-btn:hover { background: color-mix(in srgb, var(--fg) 12%, transparent); }
 .icon-btn svg { width: 24px; height: 24px; fill: currentColor; }
 
+/* ── Quick mute ──────────────────────────────────────────────────────── */
+
+/* Sits directly under the help button, level with the status pills, where the
+   row is empty at every width. Fixed, so it never nudges the board off centre. */
+.mute-btn {
+  position: fixed;
+  left: 10px;
+  top: calc(var(--header-h) + 4px);
+  z-index: 25;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--fg-dim);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  transition: color .15s, background-color .15s, transform .1s;
+}
+
+.mute-btn:hover { color: var(--fg); background: color-mix(in srgb, var(--fg) 12%, transparent); }
+.mute-btn:active { transform: scale(.92); }
+.mute-btn svg { width: 21px; height: 21px; fill: currentColor; }
+.mute-btn .ico-off { display: none; }
+
+/* Pressed means muted: the crossed speaker takes over and turns red. */
+.mute-btn[aria-pressed="true"] { color: var(--locked); }
+.mute-btn[aria-pressed="true"] .ico-on { display: none; }
+.mute-btn[aria-pressed="true"] .ico-off { display: block; }
+
 /* ── Main / board ────────────────────────────────────────────────────── */
 
 .main {
@@ -1080,6 +1112,15 @@ body.with-panel { padding-right: var(--panel-w, 240px); }
 @media (max-width: 380px) {
   .modal { padding: 16px 16px 24px; }
   .mini { width: 32px; height: 32px; font-size: 17px; }
+}
+
+/* Narrow screens: the status pills otherwise span the full width and run under
+   the fixed mute button, so make room for it and tighten them to suit. */
+@media (max-width: 430px) {
+  .status-bar { padding-left: 42px; padding-right: 6px; gap: 5px; }
+  .status-pill { font-size: 10px; padding: 3px 7px; letter-spacing: .04em; }
+  #status-pool[data-level="danger"] { font-size: 10px; }
+  #status-pool[data-level="critical"] { font-size: 11px; padding: 4px 9px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
