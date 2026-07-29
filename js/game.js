@@ -25,6 +25,9 @@ const {
 const { LOCALES, DEFAULT_LOCALE, setLocale, t, applyI18n } =
   await import(`./i18n.js${ASSET_V}`);
 
+const { sfx, unlock: unlockAudio, setEnabled: setSoundEnabled } =
+  await import(`./sfx.js${ASSET_V}`);
+
 const LOCALE = setLocale(document.documentElement.dataset.locale || DEFAULT_LOCALE);
 const LOCALE_KEY = 'omret/locale';
 
@@ -85,7 +88,7 @@ const FLIP_MS = 500;
 const defaultSave = () => ({
   settings: {
     dark: true, pool: true, strict: true, contrast: false,
-    practice: false, commonOnly: false, wordList: true,
+    practice: false, commonOnly: false, wordList: true, sound: true,
   },
   rulesVersion: RULES_VERSION,
   stats: {
@@ -383,6 +386,7 @@ function renderStatus() {
     delta.style.animation = '';
     setTimeout(() => { delta.hidden = true; }, 1600);
 
+    sfx.poolDrop(lastPoolCount - n, n);
     pool.classList.remove('bump');
     void pool.offsetWidth;
     pool.classList.add('bump');
@@ -544,6 +548,7 @@ function refuse(ch, message) {
   }
 
   navigator.vibrate?.(35);
+  sfx.refuse();
 
   // Spell out the reason, but don't stack a toast per keypress.
   const now = performance.now();
@@ -571,6 +576,7 @@ function typeLetter(ch) {
   }
 
   state.current[i] = ch;
+  if (required !== null) sfx.keyLocked(i); else sfx.key(i);
   renderBoard();
 }
 
@@ -579,6 +585,7 @@ function backspace() {
   for (let i = WORD_LENGTH - 1; i >= 0; i--) {
     if (state.current[i] !== null) {
       state.current[i] = null;
+      sfx.back();
       renderBoard();
       return;
     }
@@ -600,6 +607,7 @@ async function submit() {
 
   if (state.current.includes(null)) {
     toast(t('toast.short'));
+    sfx.reject();
     shakeRow();
     return;
   }
@@ -607,11 +615,13 @@ async function submit() {
   const res = checkLegal(state.constraints, word, dict().set, ruleOpts());
   if (!res.ok) {
     toast(rejectionMessage(res));
+    sfx.reject();
     shakeRow();
     return;
   }
 
   state.busy = true;
+  sfx.submit();
   const marks = evaluate(word, state.solution);
 
   await revealRow(rowIndex, word, marks);
@@ -642,6 +652,7 @@ function revealRow(rowIndex, word, marks) {
         setTimeout(() => {
           tile.textContent = shown[c];
           tile.dataset.state = marks[c];
+          sfx.reveal(marks[c], c);
         }, FLIP_MS / 2);
       }, c * REVEAL_MS);
     }
@@ -693,6 +704,7 @@ async function revealTrap(word) {
   renderBoard();
 
   await beat(650);
+  sfx.dread();
   toast(t('toast.nowhere'), 2400);
   await beat(750);
 
@@ -707,6 +719,7 @@ async function revealTrap(word) {
     board.classList.add('jolt');
     setTimeout(() => board.classList.remove('jolt'), 170);
     navigator.vibrate?.(18);
+    sfx.slam(c);
     await beat(280);
   }
 
@@ -727,10 +740,12 @@ async function ignite(rowIndex) {
     const tile = $(`tile-${rowIndex}-${c}`);
     tile.classList.add('doom');
     tile.dataset.state = 'locked';
+    sfx.ignite(c);
     await beat(130);
   }
 
   navigator.vibrate?.([50, 60, 120]);
+  sfx.boom();
   $(`row-${rowIndex}`).classList.add('doom-pulse');
   await beat(1500);
   $('doom-veil').classList.remove('on');
@@ -740,6 +755,7 @@ async function ignite(rowIndex) {
 async function revealFound(rowIndex) {
   state.busy = true;
   await beat(350);
+  sfx.dread();
   toast(t('end.found'), 2400);
   await beat(450);
   await ignite(rowIndex);
@@ -781,6 +797,7 @@ function endRound(ending, { quiet = false, statsDelay = null } = {}) {
     save();
   }
 
+  if (won) sfx.win();
   if (!quiet) toast(ENDING_TOAST[ending](), 2600);
   setTimeout(() => showStats(true), statsDelay ?? (won ? 2000 : 1600));
 }
@@ -948,6 +965,7 @@ async function share() {
       return;
     }
     await navigator.clipboard.writeText(text);
+    sfx.confirm();
     toast(t('toast.copied'));
   } catch {
     toast(t('toast.copyFailed'));
@@ -961,10 +979,13 @@ async function share() {
 function openModal(id) {
   for (const m of document.querySelectorAll('.modal-backdrop')) m.hidden = true;
   $(id).hidden = false;
+  sfx.open();
 }
 
 function closeModals() {
+  const wasOpen = [...document.querySelectorAll('.modal-backdrop')].some((m) => !m.hidden);
   for (const m of document.querySelectorAll('.modal-backdrop')) m.hidden = true;
+  if (wasOpen) sfx.close();
   clearInterval(countdownTimer);
 }
 
@@ -1006,6 +1027,8 @@ function applySettings() {
   $('opt-strict').setAttribute('aria-checked', String(s.strict));
   $('opt-common').setAttribute('aria-checked', String(s.commonOnly));
   $('opt-wordlist').setAttribute('aria-checked', String(s.wordList));
+  $('opt-sound').setAttribute('aria-checked', String(s.sound));
+  setSoundEnabled(s.sound);
   $('opt-contrast').setAttribute('aria-checked', String(s.contrast));
   $('opt-practice').setAttribute('aria-checked', String(s.practice));
 
@@ -1017,6 +1040,8 @@ function bindSwitch(id, key, onChange) {
     store.settings[key] = !store.settings[key];
     save();
     applySettings();
+    // Play after applySettings so muting is silent and unmuting is audible.
+    sfx.toggle(store.settings[key]);
     onChange?.();
   });
 }
@@ -1024,6 +1049,12 @@ function bindSwitch(id, key, onChange) {
 // ---------------------------------------------------------------------------
 // Wiring
 // ---------------------------------------------------------------------------
+
+// Browsers refuse to start audio until the player interacts, so the very first
+// gesture of any kind opens the context.
+for (const evt of ['pointerdown', 'keydown']) {
+  window.addEventListener(evt, () => unlockAudio(), { once: true });
+}
 
 keyboard.addEventListener('click', (e) => {
   const key = e.target.closest('.key');
@@ -1082,6 +1113,7 @@ const restartForRuleChange = (whatKey) => () => {
   startRound({ practice: state.practice });
 };
 
+bindSwitch('opt-sound', 'sound');
 bindSwitch('opt-wordlist', 'wordList', () => { renderStatus(); sizeBoard(); });
 bindSwitch('opt-strict', 'strict', restartForRuleChange('toast.strictChanged'));
 bindSwitch('opt-common', 'commonOnly', restartForRuleChange('toast.dictChanged'));
@@ -1096,10 +1128,14 @@ const sheetMode = () => window.innerWidth <= 900;
 
 $('status-pool').addEventListener('click', () => {
   if (!sheetMode() || !store.settings.wordList) return;
-  $('wordpanel').classList.toggle('open');
+  const open = $('wordpanel').classList.toggle('open');
+  if (open) sfx.open(); else sfx.close();
 });
 
-$('wp-close').addEventListener('click', () => $('wordpanel').classList.remove('open'));
+$('wp-close').addEventListener('click', () => {
+  $('wordpanel').classList.remove('open');
+  sfx.close();
+});
 
 window.addEventListener('resize', () => {
   sizeBoard();

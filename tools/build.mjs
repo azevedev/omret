@@ -33,6 +33,7 @@ const ASSETS = [
   'js/engine.js',
   'js/game.js',
   'js/i18n.js',
+  'js/sfx.js',
   'js/words-pt.js',
   'js/words-en.js',
 ];

@@ -133,6 +133,7 @@ js/words-pt.js      2,000 answers + 3,350 extra, plus accent spellings
 js/words-en.js      2,315 answers + 10,657 extra
 tools/template.html single markup source for both editions
 tools/build.mjs     writes the two locale pages
+js/sfx.js           synthesised sound, no audio files
 tools/simulate.mjs  offline balance testing
 ```
 
@@ -187,8 +188,25 @@ Findings from the simulator:
 - **Word pool panel** — testing aid listing every word, struck through and demoted
   as it becomes unplayable. A side column on desktop, a bottom sheet on phones
   (tap the counter).
+- **Sound** — on by default. Every interaction has a voice: keystrokes, the
+  reveal of each tile, the pool collapsing, the trap closing, and the win.
 - **Practice mode** — unlimited random rounds; doesn't touch stats.
 - Dark theme and a colour-blind-friendly high contrast palette.
+
+## Sound
+
+Every effect is synthesised at play time from oscillators, envelopes and filtered
+noise in `js/sfx.js`. Nothing is loaded, so there are no audio files to license or
+host, no extra requests, and it costs a few kilobytes.
+
+Pitch carries meaning rather than decorating it. A dead letter lands low and dull,
+an amber letter sits in the middle, a locked letter rings high and hard because it
+is the dangerous one, so a row is legible with your eyes shut. The cornered
+sequence works down into sub-bass, and the win is the only major arpeggio in the
+game, so relief sounds different from everything else.
+
+Browsers refuse to start audio before a gesture, so the context opens on the first
+key or tap. The Sound setting mutes everything.
 
 ## Word lists
 
